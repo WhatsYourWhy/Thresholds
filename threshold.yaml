@@ -1,0 +1,5 @@
+seed:
+  entropy: near_critical
+  attention: drifting
+  time: stretched
+  loop: open
