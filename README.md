@@ -25,3 +25,27 @@ Thresholds presents itself as a half-finished doorway—an experiment paused mid
 - **`threshold.yaml`**: A seed-like manifest listing states of entropy, attention, time, and an “open loop,” suggesting an experiment left running.  
 - **`forgotten.key`**: A base64-encoded URL (`https://cognisi.io`), acting as a cryptic invitation or misplaced credential.  
 - **🜁 ⟁ ⌘**: A trio of sigils found in `Sigil/glyph.txt`; they evoke alchemical and command motifs, hinting at elemental forces, thresholds, and hidden control.
+
+## Generative Sigil
+
+Render a minimal, parametric threshold animation in your browser:
+
+```bash
+# From the repo root
+python -m http.server 8000
+# Then open http://localhost:8000/Sigil/threshold.html
+```
+
+Adjust colors and movement via query params:
+
+- `background`, `line`, `accent`: Hex colors (with or without `#`), e.g. `?background=101018&accent=ff6bcb`.
+- `iterations`: Number of radiating threads (e.g. `180`).
+- `orbitRadius`: Base radial offset (0–1).
+- `noise`: Wobble factor (0–1).
+- `speed`: Animation increment per frame.
+
+Example:
+
+```
+http://localhost:8000/Sigil/threshold.html?background=0b0c12&line=7fffd4&accent=ff6bcb&iterations=180&noise=0.4&speed=0.55
+```
