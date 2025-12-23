@@ -49,3 +49,7 @@ Example:
 ```
 http://localhost:8000/Sigil/threshold.html?background=0b0c12&line=7fffd4&accent=ff6bcb&iterations=180&noise=0.4&speed=0.55
 ```
+
+## Contributing
+
+See [CONTRIBUTING](CONTRIBUTING.md) for stylistic guidance, naming cues, and lightweight checks before opening a doorway.
