@@ -8,13 +8,17 @@ Or maybe it finished before it started.
 Either way, there’s nothing useful here.
 
 ```
-INIT_TIMESTAMP: 42:19:00  
-ERROR: MEMORY FIELD OUT OF BOUNDS  
-TRACE: ./sigil/⌘  
+INIT_TIMESTAMP: 42:19:00
+ERROR: MEMORY FIELD OUT OF BOUNDS
+TRACE: ./sigil/⌘
 ```
 
 If you're here by accident, close the tab.  
 If you're here on purpose, the silence might mean something.
+
+## Portal
+
+There is now a small entry page at the repository root. Open `index.html` (or the GitHub Pages site for this repo) and click through to the generative sigil, the seed manifest, glyphs, or the forgotten key. It is meant to be a door more than a dashboard.
 
 ## Artistic Concept
 
@@ -22,8 +26,8 @@ Thresholds presents itself as a half-finished doorway—an experiment paused mid
 
 ### Glossary
 
-- **`threshold.yaml`**: A seed-like manifest listing states of entropy, attention, time, and an “open loop,” suggesting an experiment left running.  
-- **`forgotten.key`**: A base64-encoded URL (`https://cognisi.io`), acting as a cryptic invitation or misplaced credential.  
+- **`threshold.yaml`**: A seed-like manifest listing states of entropy, attention, time, and an “open loop,” suggesting an experiment left running.
+- **`forgotten.key`**: A base64-encoded URL (`https://cognisi.io`), acting as a cryptic invitation or misplaced credential.
 - **🜁 ⟁ ⌘**: A trio of sigils found in `Sigil/glyph.txt`; they evoke alchemical and command motifs, hinting at elemental forces, thresholds, and hidden control.
 
 ## Generative Sigil

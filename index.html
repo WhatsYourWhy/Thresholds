@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Thresholds // Portal</title>
+    <style>
+      :root {
+        color-scheme: dark;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        font-family: "Inter", "Helvetica Neue", Arial, sans-serif;
+        background: radial-gradient(circle at 20% 20%, #10131d, #0b0c12 55%);
+        color: #e8e7e3;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 2.5rem 1.5rem;
+      }
+
+      main {
+        width: min(880px, 100%);
+        background: rgba(12, 14, 22, 0.78);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        border-radius: 14px;
+        padding: 2rem;
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
+        backdrop-filter: blur(6px);
+      }
+
+      header {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        gap: 1rem;
+        margin-bottom: 1.25rem;
+      }
+
+      h1 {
+        margin: 0;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        font-size: 1.2rem;
+        color: #f3f0ff;
+      }
+
+      .whisper {
+        margin: 0;
+        opacity: 0.82;
+        font-size: 0.95rem;
+        line-height: 1.55;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 0.75rem;
+        margin: 1.5rem 0 0.75rem;
+      }
+
+      a.card {
+        text-decoration: none;
+        padding: 1rem 1.1rem;
+        border-radius: 10px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        background: linear-gradient(
+          135deg,
+          rgba(255, 255, 255, 0.04),
+          rgba(255, 255, 255, 0.01)
+        );
+        color: inherit;
+        transition: all 160ms ease;
+        display: block;
+      }
+
+      a.card:hover,
+      a.card:focus-visible {
+        border-color: rgba(127, 255, 212, 0.6);
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+        outline: none;
+        transform: translateY(-2px);
+      }
+
+      .card h2 {
+        margin: 0 0 0.35rem;
+        font-size: 1rem;
+        letter-spacing: 0.04em;
+        color: #7fffd4;
+      }
+
+      .card p {
+        margin: 0;
+        font-size: 0.92rem;
+        line-height: 1.45;
+        opacity: 0.86;
+      }
+
+      footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 1rem;
+        margin-top: 1.5rem;
+        font-size: 0.9rem;
+        opacity: 0.75;
+      }
+
+      code {
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 6px;
+        padding: 0.1rem 0.35rem;
+      }
+
+      @media (max-width: 720px) {
+        main {
+          padding: 1.5rem;
+        }
+
+        footer {
+          flex-direction: column;
+          align-items: flex-start;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <header>
+        <h1>Thresholds // Entry</h1>
+        <span aria-hidden="true">⟁⌘</span>
+      </header>
+      <p class="whisper">
+        A quiet doorway for the liminal experiments in this repository. Choose a
+        signal to follow:
+      </p>
+
+      <section class="grid" aria-label="Portals">
+        <a class="card" href="Sigil/threshold.html">
+          <h2>Generative Sigil</h2>
+          <p>
+            Open the animated threshold—tweak colors, noise, and speed via query
+            parameters.
+          </p>
+        </a>
+        <a class="card" href="threshold.yaml">
+          <h2>Seed Manifest</h2>
+          <p>
+            Read the entropy, attention, and time values that describe the open
+            loop.
+          </p>
+        </a>
+        <a class="card" href="forgotten.key">
+          <h2>Forgotten Key</h2>
+          <p>A base64 link, left as an invitation. Decode gently.</p>
+        </a>
+        <a class="card" href="Sigil/glyph.txt">
+          <h2>Glyphs</h2>
+          <p>
+            Symbols that whisper the project's intent. Nothing more, nothing
+            less.
+          </p>
+        </a>
+        <a class="card" href="README.md">
+          <h2>Concept & Notes</h2>
+          <p>
+            Context for the threshold—what it feels like, and how to tend to it.
+          </p>
+        </a>
+        <a class="card" href="CONTRIBUTING.md">
+          <h2>Contribution Ritual</h2>
+          <p>
+            Stylistic guidance for adding new artifacts without breaking the
+            hush.
+          </p>
+        </a>
+      </section>
+
+      <footer>
+        <span
+          >Serve locally with <code>python -m http.server 8000</code> and open
+          <code>http://localhost:8000</code>.</span
+        >
+        <span>On GitHub Pages, this portal lives at the repository root.</span>
+      </footer>
+    </main>
+  </body>
+</html>
