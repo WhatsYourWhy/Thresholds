@@ -18,7 +18,7 @@ If you're here on purpose, the silence might mean something.
 
 ## Portal
 
-There is now a small entry page at the repository root. Open `index.html` (or the GitHub Pages site for this repo) and click through to the generative sigil, the seed manifest, glyphs, or the forgotten key. It is meant to be a door more than a dashboard.
+There is now a small entry page at the repository root. Open `index.html` (or the GitHub Pages site for this repo) and click through to the generative sigil, the seed manifest, glyphs, the forgotten key, these notes, or the contribution ritual. It is meant to be a door more than a dashboard.
 
 ## Artistic Concept
 
