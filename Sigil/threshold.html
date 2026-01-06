@@ -77,9 +77,20 @@
       const params = new URLSearchParams(window.location.search);
 
       function parseColor(input, fallback) {
-        if (!input) return fallback;
-        const clean = input.replace(/^#/, "").slice(0, 6);
-        return `#${clean.padEnd(6, "0")}`;
+        if (!input || typeof input !== "string") return fallback;
+        const clean = input.trim().replace(/^#/, "");
+        const isValidHex = /^[0-9a-fA-F]+$/.test(clean);
+        if (!isValidHex || (clean.length !== 3 && clean.length !== 6)) {
+          return fallback;
+        }
+        const expanded =
+          clean.length === 3
+            ? clean
+                .split("")
+                .map((char) => `${char}${char}`)
+                .join("")
+            : clean;
+        return `#${expanded.toLowerCase()}`;
       }
 
       function parseNumber(input, fallback, bounds = {}) {
