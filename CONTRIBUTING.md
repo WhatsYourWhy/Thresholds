@@ -31,3 +31,7 @@ There is no enforced toolchain, but contributors are encouraged to run quick san
 - For general review: serve locally to confirm the atmosphere holds: `python -m http.server 8000` and open `http://localhost:8000/Sigil/threshold.html`
 
 If you add new scripts, include a one-line command to exercise them.
+
+### Liminal Checks
+
+- Whispered regression for the sigil canvas: `npm install && npx playwright install chromium && npm test`
