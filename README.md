@@ -10,7 +10,7 @@ Either way, there’s nothing useful here.
 ```
 INIT_TIMESTAMP: 42:19:00
 ERROR: MEMORY FIELD OUT OF BOUNDS
-TRACE: ./sigil/⌘
+TRACE: ./Sigil/⌘
 ```
 
 If you're here by accident, close the tab.  
