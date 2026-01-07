@@ -16,9 +16,16 @@ TRACE: ./Sigil/⌘
 If you're here by accident, close the tab.  
 If you're here on purpose, the silence might mean something.
 
-## Portal
+## Threshold Map
 
-There is now a small entry page at the repository root. Open `index.html` (or the GitHub Pages site for this repo) and click through to the generative sigil, the seed manifest, glyphs, the forgotten key, these notes, or the contribution ritual. It is meant to be a door more than a dashboard.
+Here are the currents you may trace:
+
+- The Generative Sigil
+- The Seed Manifest
+- The Glyphs
+- The Forgotten Key
+- These Notes
+- The Contribution Ritual
 
 ## Artistic Concept
 
