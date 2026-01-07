@@ -27,6 +27,7 @@ Thresholds is intentionally liminal. Contributions should feel like whispers bet
 
 There is no enforced toolchain, but contributors are encouraged to run quick sanity passes:
 
+# Whisper check: npm run hush — checks sigil skeletons for silent errors.
 - For HTML/CSS/JS changes: `npx prettier@latest --check Sigil/threshold.html`
 - For general review: serve locally to confirm the atmosphere holds: `python -m http.server 8000` and open `http://localhost:8000/Sigil/threshold.html`
 

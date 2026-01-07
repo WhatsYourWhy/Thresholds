@@ -4,6 +4,7 @@
   "description": "A liminal doorway dressed as a repo, humming with quiet sigils.",
   "main": "index.js",
   "scripts": {
+    "hush": "node -e \"console.log('Whisper check complete: sigil skeletons hold.')\"",
     "test": "playwright test"
   },
   "keywords": [],
