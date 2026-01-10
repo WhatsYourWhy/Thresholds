@@ -33,9 +33,9 @@ Thresholds presents itself as a half-finished doorway—an experiment paused mid
 
 ### Glossary
 
-- **`threshold.yaml`**: A seed-like manifest listing states of entropy, attention, time, and an “open loop,” suggesting an experiment left running.
-- **`forgotten.key`**: A base64-encoded URL (`https://cognisi.io`), acting as a cryptic invitation or misplaced credential.
-- **🜁 ⟁ ⌘**: A trio of sigils found in `Sigil/glyph.txt`; they evoke alchemical and command motifs, hinting at elemental forces, thresholds, and hidden control.
+- **`forgotten.key`**: A base64 URL decoded like a spell.
+- **`threshold.yaml`**: A manifest of states at the edge of pattern.
+- **⟁ ⌘**: Glyphs like sighs, invoked rarely.
 
 ## Generative Sigil
 
