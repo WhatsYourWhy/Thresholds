@@ -1,5 +1,6 @@
-seed:
-  entropy: near_critical
-  attention: drifting
-  time: stretched
-  loop: open
+# Probe these values gently — they describe states, not settings.
+entropy: 0.997
+attention: drifting
+time: stretched
+loop: half-open
+portal: unseen
