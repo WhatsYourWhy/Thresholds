@@ -17,6 +17,12 @@ Thresholds is intentionally liminal. Contributions should feel like whispers bet
    - Keys, seeds, or encoded hints should be clearly named but still thematic (e.g., `whisper.key`).
 3. If adding something entirely new, include a minimal usage or preview snippet so others can witness it without guesswork.
 
+### Ritual checklist
+
+- **Intent note**: Leave 1–3 lines that name the threshold you are touching and the feeling it should carry.
+- **Placement choice**: Sigils reside in `Sigil/`, lore stays at the root.
+- **Preview**: Offer a tiny render or a short param example so the doorway can be glimpsed.
+
 ## Preferred Organization
 
 - Keep root files sparse and purposeful: manifest-like configs (`*.yaml`), keys, and top-level guidance.
