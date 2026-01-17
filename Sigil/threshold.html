@@ -55,11 +55,27 @@
         box-shadow: 0 6px 18px rgba(0, 0, 0, 0.4);
         pointer-events: none;
       }
+
+      .sr-only {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+      }
     </style>
   </head>
   <body>
     <header>Threshold Signal // minimal generative sigil</header>
-    <canvas id="sigil"></canvas>
+    <p class="sr-only" id="sigil-desc">
+      A looping generative sigil radiates lines from a soft center, pulsing with
+      color shifts defined by quiet parameters.
+    </p>
+    <canvas id="sigil" aria-describedby="sigil-desc"></canvas>
     <div class="legend" id="legend"></div>
 
     <script>
