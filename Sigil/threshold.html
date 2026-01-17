@@ -51,6 +51,8 @@
         padding: 0.5rem 0.75rem;
         font-size: 0.8rem;
         line-height: 1.35;
+        max-width: min(420px, 90vw);
+        word-break: break-word;
         backdrop-filter: blur(4px);
         box-shadow: 0 6px 18px rgba(0, 0, 0, 0.4);
         pointer-events: none;
@@ -110,6 +112,9 @@
       }
 
       function parseNumber(input, fallback, bounds = {}) {
+        if (input === null || input === undefined || input === "") {
+          return fallback;
+        }
         const parsed = Number(input);
         if (!Number.isFinite(parsed)) return fallback;
         const { min, max } = bounds;
