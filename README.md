@@ -47,6 +47,8 @@ python -m http.server 8000
 # Then open http://localhost:8000/Sigil/threshold.html
 ```
 
+Entry point: `Sigil/threshold.html` is the doorway for the canvas sigil.
+
 Adjust colors and movement via query params:
 
 - `background`, `line`, `accent`: Hex colors (with or without `#`), e.g. `?background=101018&accent=ff6bcb`.
