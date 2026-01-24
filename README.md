@@ -16,17 +16,18 @@ TRACE: ./Sigil/⌘
 If you're here by accident, close the tab.  
 If you're here on purpose, the silence might mean something.
 
-## Threshold Map
+## Repository Map
 
-Here are the currents you may trace:
+Files and entry points that exist today:
 
-- The Generative Sigil
-- The Seed Manifest
-- The Glyphs
-- The Forgotten Key
-- These Notes
-- The Contribution Ritual
-- The Pages: https://whatsyourwhy.github.io/Thresholds/
+- `index.html`: a small portal page that links to the artifacts in this repo.
+- `Sigil/threshold.html`: the generative canvas sigil (see usage below).
+- `Sigil/glyph.txt` and `Sigil/sigil-threshold.txt`: glyph text and a short param hint.
+- `threshold.yaml`: the lightweight state manifest shown on the portal.
+- `forgotten.html` and `forgotten.key`: a static page plus a base64-encoded URL.
+- `README.md` and `CONTRIBUTING.md`: notes and contribution guidance.
+
+Pages: https://whatsyourwhy.github.io/Thresholds/
 
 ## Artistic Concept
 
@@ -52,16 +53,24 @@ Entry point: `Sigil/threshold.html` is the doorway for the canvas sigil.
 
 Adjust colors and movement via query params:
 
-- `background`, `line`, `accent`: Hex colors (with or without `#`), e.g. `?background=101018&accent=ff6bcb`.
-- `iterations`: Number of radiating threads (e.g. `180`).
+- `background`, `line`, `accent`: Hex colors (3 or 6 digits, with or without `#`), e.g. `?background=101018&accent=ff6bcb`.
+- `iterations`: Number of radiating threads (clamped to 24–720).
 - `orbitRadius`: Base radial offset (0–1).
 - `noise`: Wobble factor (0–1).
-- `speed`: Animation increment per frame.
+- `speed`: Animation increment per frame (0–3).
 
 Example:
 
 ```
 http://localhost:8000/Sigil/threshold.html?background=0b0c12&line=7fffd4&accent=ff6bcb&iterations=180&noise=0.4&speed=0.55
+```
+
+## Forgotten Key
+
+`forgotten.key` is a base64 string that decodes to a URL. One way to reveal it:
+
+```bash
+base64 --decode forgotten.key
 ```
 
 ## Contributing
