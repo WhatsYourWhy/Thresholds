@@ -22,7 +22,8 @@ function summonStaticServer() {
       const safePath = requestedPath.endsWith("/")
         ? `${requestedPath}index.html`
         : requestedPath;
-      const absolute = path.normalize(path.join(root, safePath));
+      const relativePath = safePath.replace(/^\/+/, "");
+      const absolute = path.normalize(path.join(root, relativePath));
 
       if (!absolute.startsWith(root)) {
         response.statusCode = 403;
@@ -79,7 +80,40 @@ test.describe("threshold sigil", () => {
       const node = document.getElementById("sigil");
       return node && node.width > 0 && node.height > 0;
     });
-    await page.waitForTimeout(900);
+    await page.waitForFunction(
+      (bgHex) => {
+        const node = document.getElementById("sigil");
+        if (!node) return false;
+        const ctx = node.getContext("2d");
+        const width = node.width;
+        const height = node.height;
+        if (!ctx || width === 0 || height === 0) return false;
+        const snapshot = ctx.getImageData(0, 0, width, height).data;
+
+        const cleanHex = bgHex.startsWith("#") ? bgHex.slice(1) : bgHex;
+        const backgroundColor = [
+          parseInt(cleanHex.slice(0, 2), 16),
+          parseInt(cleanHex.slice(2, 4), 16),
+          parseInt(cleanHex.slice(4, 6), 16),
+        ];
+
+        let nonBackground = 0;
+        for (let i = 0; i < snapshot.length; i += 4) {
+          const matchesBackground =
+            snapshot[i] === backgroundColor[0] &&
+            snapshot[i + 1] === backgroundColor[1] &&
+            snapshot[i + 2] === backgroundColor[2];
+
+          if (!matchesBackground) {
+            nonBackground += 1;
+            if (nonBackground > 120) break;
+          }
+        }
+
+        return nonBackground > 0;
+      },
+      background,
+    );
 
     const render = await canvas.evaluate((node, bgHex) => {
       const ctx = node.getContext("2d");
