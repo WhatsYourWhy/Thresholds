@@ -154,12 +154,23 @@
       const legend = document.getElementById("legend");
       let dpr = window.devicePixelRatio || 1;
 
+      function veilBackground() {
+        const width = canvas.width / dpr;
+        const height = canvas.height / dpr;
+        ctx.save();
+        ctx.globalAlpha = 1;
+        ctx.fillStyle = config.background;
+        ctx.fillRect(0, 0, width, height);
+        ctx.restore();
+      }
+
       function resize() {
         dpr = window.devicePixelRatio || 1;
         const { width, height } = canvas.getBoundingClientRect();
-        canvas.width = width * dpr;
-        canvas.height = height * dpr;
+        canvas.width = Math.max(1, Math.round(width * dpr));
+        canvas.height = Math.max(1, Math.round(height * dpr));
         ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        veilBackground();
       }
 
       let frame = 0;
@@ -234,8 +245,6 @@
       resize();
       seedDots(config.iterations);
       updateLegend();
-      ctx.fillStyle = config.background;
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
       requestAnimationFrame(loop);
     </script>
   </body>
