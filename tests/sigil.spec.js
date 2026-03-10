@@ -1,4 +1,4 @@
-const { test, expect } = require("@playwright/test");
+﻿const { test, expect } = require("@playwright/test");
 const fs = require("fs");
 const http = require("http");
 const path = require("path");
@@ -7,11 +7,14 @@ const { URL } = require("url");
 const root = path.resolve(__dirname, "..");
 
 const mimeByExtension = {
-  ".html": "text/html",
   ".css": "text/css",
+  ".html": "text/html",
   ".js": "text/javascript",
   ".json": "application/json",
+  ".key": "text/plain",
+  ".md": "text/plain",
   ".txt": "text/plain",
+  ".yaml": "text/plain",
 };
 
 function summonStaticServer() {
@@ -39,8 +42,7 @@ function summonStaticServer() {
         }
 
         const ext = path.extname(absolute).toLowerCase();
-        const contentType = mimeByExtension[ext] || "application/octet-stream";
-        response.setHeader("Content-Type", contentType);
+        response.setHeader("Content-Type", mimeByExtension[ext] || "application/octet-stream");
         fs.createReadStream(absolute).pipe(response);
       });
     });
@@ -52,7 +54,7 @@ function summonStaticServer() {
   });
 }
 
-test.describe("threshold sigil", () => {
+test.describe("threshold room", () => {
   let listening;
 
   test.beforeAll(async () => {
@@ -63,57 +65,64 @@ test.describe("threshold sigil", () => {
     await new Promise((resolve) => listening.server.close(resolve));
   });
 
-  test("draws beyond its background when tuned by query string", async ({
-    page,
-  }) => {
-    const background = "#10131d";
-    const lineColor = "7fffd4";
-    const accent = "ff6bcb";
-    const iterations = 96;
-    const url = `http://localhost:${listening.port}/Sigil/threshold.html?background=${background.slice(1)}&line=${lineColor}&accent=${accent}&iterations=${iterations}&noise=0.42&speed=0.65`;
+  test("renders the room and advances phase", async ({ page }) => {
+    const url = `http://localhost:${listening.port}/index.html?seed=door-salt&phase=approach`;
+    await page.goto(url);
+
+    await expect(page.locator("[data-testid='room-canvas']")).toBeVisible();
+    await expect(page.locator("body")).toHaveAttribute("data-phase", "approach");
+
+    const title = page.locator("[data-testid='room-title']");
+    const firstTitle = await title.textContent();
+
+    await page.locator("#phase-button").click();
+    await expect(page.locator("body")).toHaveAttribute("data-phase", "listen");
+    await expect(title).not.toHaveText(firstTitle || "");
+
+    const panel = page.locator("[data-testid='manifest-panel']");
+    const before = await panel.getAttribute("data-open");
+    await page.keyboard.press("KeyM");
+    await expect(panel).toHaveAttribute(
+      "data-open",
+      before === "true" ? "false" : "true",
+    );
+  });
+
+  test("same seed and phase produce the same text fragments", async ({ page }) => {
+    const url = `http://localhost:${listening.port}/index.html?seed=ashen-window&phase=cross`;
+
+    await page.goto(url);
+    await expect(page.locator("[data-testid='room-title']")).toBeVisible();
+
+    const firstSnapshot = await page.evaluate(() => ({
+      title: document.querySelector("[data-testid='room-title']")?.textContent,
+      whisper: document.getElementById("room-whisper")?.textContent,
+      drift: Array.from(document.querySelectorAll("#drift-grid span")).map((node) => node.textContent),
+    }));
 
     await page.goto(url);
 
-    const canvas = page.locator("#sigil");
+    const secondSnapshot = await page.evaluate(() => ({
+      title: document.querySelector("[data-testid='room-title']")?.textContent,
+      whisper: document.getElementById("room-whisper")?.textContent,
+      drift: Array.from(document.querySelectorAll("#drift-grid span")).map((node) => node.textContent),
+    }));
+
+    expect(secondSnapshot).toEqual(firstSnapshot);
+  });
+
+  test("observatory still renders non-background pixels with legacy params", async ({ page }) => {
+    const background = "#10131d";
+    const url = `http://localhost:${listening.port}/Sigil/threshold.html?background=${background.slice(1)}&line=7fffd4&accent=ff6bcb&iterations=96&noise=0.42&speed=0.65`;
+
+    await page.goto(url);
+
+    const canvas = page.locator("[data-testid='sigil-canvas']");
     await expect(canvas).toBeVisible();
     await page.waitForFunction(() => {
       const node = document.getElementById("sigil");
       return node && node.width > 0 && node.height > 0;
     });
-    await page.waitForFunction(
-      (bgHex) => {
-        const node = document.getElementById("sigil");
-        if (!node) return false;
-        const ctx = node.getContext("2d");
-        const width = node.width;
-        const height = node.height;
-        if (!ctx || width === 0 || height === 0) return false;
-        const snapshot = ctx.getImageData(0, 0, width, height).data;
-
-        const cleanHex = bgHex.startsWith("#") ? bgHex.slice(1) : bgHex;
-        const backgroundColor = [
-          parseInt(cleanHex.slice(0, 2), 16),
-          parseInt(cleanHex.slice(2, 4), 16),
-          parseInt(cleanHex.slice(4, 6), 16),
-        ];
-
-        let nonBackground = 0;
-        for (let i = 0; i < snapshot.length; i += 4) {
-          const matchesBackground =
-            snapshot[i] === backgroundColor[0] &&
-            snapshot[i + 1] === backgroundColor[1] &&
-            snapshot[i + 2] === backgroundColor[2];
-
-          if (!matchesBackground) {
-            nonBackground += 1;
-            if (nonBackground > 120) break;
-          }
-        }
-
-        return nonBackground > 0;
-      },
-      background,
-    );
 
     const render = await canvas.evaluate((node, bgHex) => {
       const ctx = node.getContext("2d");
@@ -137,7 +146,7 @@ test.describe("threshold sigil", () => {
 
         if (!matchesBackground) {
           nonBackground += 1;
-          if (nonBackground > 120) break;
+          if (nonBackground > 400) break;
         }
       }
 
@@ -146,6 +155,61 @@ test.describe("threshold sigil", () => {
 
     expect(render.width).toBeGreaterThan(0);
     expect(render.height).toBeGreaterThan(0);
-    expect(render.nonBackground).toBeGreaterThan(0);
+    expect(render.nonBackground).toBeGreaterThan(120);
+  });
+
+  test("memory chamber reveals the decoded key with keyboard input", async ({ page }) => {
+    const url = `http://localhost:${listening.port}/forgotten.html?seed=amber-latch`;
+    await page.goto(url);
+
+    const button = page.locator("[data-testid='reveal-key']");
+    await button.focus();
+    await page.keyboard.press("Enter");
+
+    await expect(page.locator("[data-testid='memory-output']")).toContainText(
+      "https://cognisi.io",
+    );
+  });
+
+  test("reduced-motion mode still renders a coherent room", async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await page.goto(`http://localhost:${listening.port}/index.html?seed=slow-lantern`);
+
+    await expect(page.locator("body")).toHaveAttribute("data-motion", "reduced");
+    await expect(page.locator("[data-testid='room-canvas']")).toBeVisible();
+  });
+});
+
+test.describe("mobile thresholds", () => {
+  test.use({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });
+
+  let listening;
+
+  test.beforeAll(async () => {
+    listening = await summonStaticServer();
+  });
+
+  test.afterAll(async () => {
+    await new Promise((resolve) => listening.server.close(resolve));
+  });
+
+  test("room controls remain visible on mobile", async ({ page }) => {
+    await page.goto(`http://localhost:${listening.port}/index.html?seed=mobile-veil`);
+
+    const phaseButton = page.locator("#phase-button");
+    await expect(phaseButton).toBeVisible();
+    const box = await phaseButton.boundingBox();
+
+    expect(box).not.toBeNull();
+    expect(box.y + box.height).toBeLessThanOrEqual(844);
+  });
+
+  test("memory chamber reveal works by touch", async ({ page }) => {
+    await page.goto(`http://localhost:${listening.port}/forgotten.html?seed=touch-echo`);
+
+    await page.locator("[data-testid='reveal-key']").tap();
+    await expect(page.locator("[data-testid='memory-output']")).toContainText(
+      "https://cognisi.io",
+    );
   });
 });

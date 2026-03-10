@@ -1,12 +1,16 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Thresholds // Forgotten Key</title>
+    <title>Thresholds :: Memory Chamber</title>
     <style>
       :root {
         color-scheme: dark;
+        --bg: #0c0f18;
+        --line: #d7c8ff;
+        --accent: #ffd089;
+        --panel: rgba(10, 13, 24, 0.82);
       }
 
       * {
@@ -16,119 +20,270 @@
       body {
         margin: 0;
         min-height: 100vh;
-        font-family: "Inter", "Helvetica Neue", Arial, sans-serif;
-        background: radial-gradient(circle at 20% 20%, #10131d, #0b0c12 55%);
-        color: #e8e7e3;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: 2.5rem 1.5rem;
+        background:
+          radial-gradient(circle at 18% 18%, rgba(255, 255, 255, 0.05), transparent 20%),
+          linear-gradient(150deg, #05070d 0%, var(--bg) 58%, #150d16 100%);
+        color: #f4ecdf;
+        font-family: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Georgia, serif;
+        display: grid;
+        place-items: center;
+        overflow: hidden;
+      }
+
+      .grain {
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        opacity: 0.14;
+        background-image:
+          linear-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+        background-size: 4px 4px, 6px 6px;
+      }
+
+      .veil {
+        position: fixed;
+        inset: 0;
+        z-index: 0;
       }
 
       main {
-        width: min(720px, 100%);
-        background: rgba(12, 14, 22, 0.78);
-        border: 1px solid rgba(255, 255, 255, 0.06);
-        border-radius: 14px;
-        padding: 2rem;
-        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
-        backdrop-filter: blur(6px);
+        position: relative;
+        z-index: 1;
+        width: min(56rem, calc(100vw - 2rem));
+        display: grid;
+        grid-template-columns: minmax(0, 0.95fr) minmax(280px, 0.85fr);
+        gap: 1rem;
+        align-items: stretch;
       }
 
-      header {
-        display: flex;
-        justify-content: space-between;
-        align-items: baseline;
+      .chamber,
+      .aside {
+        border-radius: 1.7rem;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        background: linear-gradient(160deg, rgba(8, 11, 18, 0.9), var(--panel));
+        backdrop-filter: blur(10px);
+        box-shadow: 0 28px 80px rgba(0, 0, 0, 0.42);
+      }
+
+      .chamber {
+        padding: 1.4rem;
+        display: grid;
         gap: 1rem;
-        margin-bottom: 1.25rem;
+      }
+
+      .aside {
+        padding: 1.2rem;
+      }
+
+      .micro,
+      button,
+      a,
+      .decoded {
+        font-family: "IBM Plex Mono", "Cascadia Code", "Fira Code", Consolas, monospace;
+      }
+
+      .micro {
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+        font-size: 0.72rem;
+        color: var(--line);
       }
 
       h1 {
         margin: 0;
-        letter-spacing: 0.06em;
-        text-transform: uppercase;
-        font-size: 1.2rem;
-        color: #f3f0ff;
+        font-size: clamp(2.4rem, 7vw, 4.8rem);
+        line-height: 0.96;
+        letter-spacing: -0.04em;
       }
 
-      .whisper {
-        margin: 0 0 1.25rem;
-        opacity: 0.82;
-        font-size: 0.95rem;
-        line-height: 1.6;
-      }
-
-      .warning {
-        padding: 1rem 1.1rem;
-        border-radius: 10px;
-        border: 1px solid rgba(255, 255, 255, 0.12);
-        background: rgba(127, 255, 212, 0.08);
-        margin-bottom: 1.5rem;
-        line-height: 1.55;
+      p {
+        margin: 0;
+        line-height: 1.7;
+        color: rgba(244, 236, 223, 0.82);
       }
 
       .actions {
         display: flex;
-        gap: 0.75rem;
         flex-wrap: wrap;
+        gap: 0.8rem;
       }
 
-      .btn {
-        text-decoration: none;
-        padding: 0.75rem 1.1rem;
-        border-radius: 10px;
-        border: 1px solid rgba(127, 255, 212, 0.6);
-        color: #7fffd4;
-        transition: all 160ms ease;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        font-weight: 600;
-      }
-
-      .btn.secondary {
-        border-color: rgba(255, 255, 255, 0.2);
+      button,
+      a {
+        appearance: none;
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        border-radius: 999px;
+        padding: 0.82rem 1rem;
         color: inherit;
+        text-decoration: none;
+        background: rgba(255, 255, 255, 0.05);
+        cursor: pointer;
+        transition: transform 180ms ease, background 180ms ease, border-color 180ms ease;
       }
 
-      .btn:hover,
-      .btn:focus-visible {
-        border-color: rgba(127, 255, 212, 0.9);
-        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+      button:hover,
+      button:focus-visible,
+      a:hover,
+      a:focus-visible {
         outline: none;
-        transform: translateY(-2px);
+        transform: translateY(-1px);
+        background: rgba(255, 255, 255, 0.1);
+        border-color: rgba(255, 255, 255, 0.3);
       }
 
-      @media (max-width: 720px) {
-        main {
-          padding: 1.5rem;
-        }
+      .memory-card {
+        padding: 1rem;
+        border-radius: 1.15rem;
+        border: 1px solid rgba(255, 255, 255, 0.07);
+        background: rgba(255, 255, 255, 0.04);
+        display: grid;
+        gap: 0.6rem;
+      }
 
-        .actions {
-          flex-direction: column;
-          align-items: stretch;
+      .decoded {
+        min-height: 3rem;
+        padding: 0.95rem 1rem;
+        border-radius: 1rem;
+        background: rgba(3, 5, 10, 0.5);
+        color: var(--accent);
+        word-break: break-word;
+      }
+
+      .aside h2 {
+        margin: 0 0 0.6rem;
+        font-size: 1rem;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: var(--line);
+      }
+
+      .sigil-note {
+        margin-top: 1rem;
+        padding-top: 1rem;
+        border-top: 1px solid rgba(255, 255, 255, 0.08);
+        color: rgba(244, 236, 223, 0.72);
+      }
+
+      @media (max-width: 880px) {
+        main {
+          grid-template-columns: 1fr;
+          width: min(38rem, calc(100vw - 1.25rem));
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+          animation-duration: 1ms !important;
+          transition-duration: 1ms !important;
         }
       }
     </style>
+    <script src="thresholds.js" defer></script>
   </head>
   <body>
+    <canvas class="veil" id="memory-canvas" aria-hidden="true"></canvas>
+    <div class="grain" aria-hidden="true"></div>
     <main>
-      <header>
-        <h1>Forgotten Key</h1>
-        <span aria-hidden="true">⟁⌘</span>
-      </header>
-      <p class="whisper">
-        The file below is a plain-text key. Browsers may download it
-        automatically once you follow the link.
-      </p>
-      <div class="warning" role="alert">
-        <strong>Before you proceed:</strong> confirm you want to download the
-        key, and be mindful of where it lands on your device.
-      </div>
-      <div class="actions">
-        <a class="btn" href="forgotten.key" download>Download the key</a>
-        <a class="btn secondary" href="index.html">Return to portal</a>
-      </div>
+      <section class="chamber">
+        <div class="micro">Memory Chamber</div>
+        <h1>What was hidden is only delayed.</h1>
+        <p>
+          This chamber does not push the key into your downloads folder. It lets the address arrive in the room first.
+        </p>
+
+        <div class="memory-card">
+          <div class="micro">Decoded address</div>
+          <div class="decoded" id="decoded-output" data-testid="memory-output">The chamber is waiting.</div>
+          <p id="memory-note">Reveal the key by click, keyboard, or touch. The old link will appear here in daylight.</p>
+        </div>
+
+        <div class="actions">
+          <button id="reveal-button" data-testid="reveal-key" type="button">Reveal the key</button>
+          <button id="copy-button" type="button">Copy address</button>
+          <a id="open-link" href="forgotten.key" download>Download the raw key</a>
+          <a href="index.html">Return to the room</a>
+        </div>
+      </section>
+
+      <aside class="aside">
+        <h2>Aside</h2>
+        <p>
+          The file is still the same plain-text base64 artifact. Only the ritual around it has changed.
+        </p>
+        <p class="sigil-note" id="sigil-note"></p>
+      </aside>
     </main>
+
+    <script>
+      window.addEventListener("DOMContentLoaded", () => {
+        const Engine = window.ThresholdsEngine;
+        const search = new URLSearchParams(window.location.search);
+        const reduceMotion =
+          window.matchMedia &&
+          window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        const seed = Engine.sanitizeSeed(search.get("seed")) || Engine.generateSeed();
+
+        const canvas = document.getElementById("memory-canvas");
+        const decodedOutput = document.getElementById("decoded-output");
+        const revealButton = document.getElementById("reveal-button");
+        const copyButton = document.getElementById("copy-button");
+        const openLink = document.getElementById("open-link");
+        const memoryNote = document.getElementById("memory-note");
+        const sigilNote = document.getElementById("sigil-note");
+        const text = Engine.deriveText(seed, "cross");
+
+        sigilNote.textContent = text.secret;
+
+        const renderer = Engine.createSigilRenderer({
+          canvas,
+          seed,
+          phase: "listen",
+          reduceMotion,
+          overrides: {
+            speed: reduceMotion ? 0.18 : 0.36,
+            noise: reduceMotion ? 0.12 : 0.26,
+          },
+        });
+
+        async function revealKey() {
+          try {
+            const response = await fetch("forgotten.key");
+            const encoded = await response.text();
+            const decoded = Engine.decodeBase64(encoded);
+            decodedOutput.textContent = decoded || "The key would not translate.";
+            openLink.href = decoded || "forgotten.key";
+            openLink.removeAttribute("download");
+            memoryNote.textContent = "The old address is now visible, and the raw key is still nearby if you want the artifact itself.";
+          } catch (error) {
+            decodedOutput.textContent = "The chamber could not reach the key.";
+            memoryNote.textContent = "Fetch failed, but the raw key remains available as a file.";
+          }
+        }
+
+        revealButton.addEventListener("click", revealKey);
+        copyButton.addEventListener("click", async () => {
+          const value = decodedOutput.textContent.trim();
+          if (!value || value === "The chamber is waiting.") return;
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            await navigator.clipboard.writeText(value);
+            memoryNote.textContent = "The address has been copied.";
+          }
+        });
+
+        document.addEventListener("pointermove", (event) => {
+          renderer.setPointer({
+            x: event.clientX / window.innerWidth,
+            y: event.clientY / window.innerHeight,
+            active: true,
+          });
+        });
+
+        document.addEventListener("pointerleave", () => renderer.clearPointer());
+      });
+    </script>
   </body>
 </html>
+

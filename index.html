@@ -1,194 +1,844 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Thresholds // Portal</title>
+    <title>Threshold Room</title>
     <style>
       :root {
         color-scheme: dark;
+        --bg: #08111f;
+        --line: #95f2ff;
+        --accent: #ffd089;
+        --panel: rgba(8, 15, 28, 0.74);
+        --mist: rgba(149, 242, 255, 0.12);
+        --shadow: rgba(0, 0, 0, 0.42);
+        --paper: #f4ecdf;
       }
 
       * {
         box-sizing: border-box;
       }
 
+      html,
       body {
         margin: 0;
+        min-height: 100%;
+      }
+
+      body {
         min-height: 100vh;
-        font-family: "Inter", "Helvetica Neue", Arial, sans-serif;
-        background: radial-gradient(circle at 20% 20%, #10131d, #0b0c12 55%);
-        color: #e8e7e3;
-        display: flex;
+        background:
+          radial-gradient(circle at 16% 18%, rgba(255, 255, 255, 0.08), transparent 22%),
+          radial-gradient(circle at 84% 18%, rgba(255, 208, 137, 0.12), transparent 20%),
+          linear-gradient(145deg, #05070d 0%, var(--bg) 55%, #120c14 100%);
+        color: var(--paper);
+        font-family: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Georgia, serif;
+        overflow-x: hidden;
+      }
+
+      body::before,
+      body::after {
+        content: "";
+        position: fixed;
+        inset: auto;
+        pointer-events: none;
+        z-index: 0;
+      }
+
+      body::before {
+        width: 36rem;
+        height: 36rem;
+        top: -10rem;
+        right: -8rem;
+        border-radius: 50%;
+        background: radial-gradient(circle, rgba(255, 208, 137, 0.12), transparent 70%);
+        filter: blur(12px);
+      }
+
+      body::after {
+        width: 28rem;
+        height: 28rem;
+        bottom: -8rem;
+        left: -6rem;
+        border-radius: 50%;
+        background: radial-gradient(circle, var(--mist), transparent 72%);
+        filter: blur(10px);
+      }
+
+      .grain {
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        opacity: 0.16;
+        background-image:
+          linear-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
+        background-size: 3px 3px, 5px 5px;
+        mix-blend-mode: soft-light;
+        z-index: 1;
+      }
+
+      .room {
+        position: relative;
+        z-index: 2;
+        min-height: 100vh;
+        display: grid;
+        grid-template-columns: minmax(0, 1.15fr) minmax(280px, 360px);
+        gap: 1.25rem;
+        padding: 1.25rem;
+      }
+
+      .hero,
+      .manifest-shell,
+      .secret-shell {
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        background: linear-gradient(160deg, rgba(7, 10, 18, 0.86), var(--panel));
+        box-shadow: 0 26px 80px var(--shadow);
+        backdrop-filter: blur(10px);
+      }
+
+      .hero {
+        position: relative;
+        border-radius: 1.8rem;
+        padding: clamp(1.2rem, 3vw, 2.2rem);
+        display: grid;
+        grid-template-columns: minmax(0, 1.1fr) minmax(260px, 0.9fr);
+        gap: 1.5rem;
+        align-items: start;
+        overflow: hidden;
+      }
+
+      .hero::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background:
+          radial-gradient(circle at 25% 18%, rgba(255, 255, 255, 0.08), transparent 26%),
+          linear-gradient(120deg, rgba(255, 255, 255, 0.03), transparent 55%);
+        pointer-events: none;
+      }
+
+      .intro,
+      .sigil-column {
+        position: relative;
+        z-index: 1;
+      }
+
+      .eyebrow,
+      .microcopy,
+      .controls button,
+      .artifact-dock,
+      .manifest-shell,
+      .secret-shell,
+      .seedline {
+        font-family: "IBM Plex Mono", "Cascadia Code", "Fira Code", Consolas, monospace;
+      }
+
+      .eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.7rem;
+        letter-spacing: 0.22em;
+        text-transform: uppercase;
+        font-size: 0.72rem;
+        color: var(--line);
+        margin-bottom: 1rem;
+      }
+
+      .eyebrow span {
+        display: inline-flex;
         align-items: center;
         justify-content: center;
-        padding: 2.5rem 1.5rem;
-      }
-
-      main {
-        width: min(880px, 100%);
-        background: rgba(12, 14, 22, 0.78);
-        border: 1px solid rgba(255, 255, 255, 0.06);
-        border-radius: 14px;
-        padding: 2rem;
-        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
-        backdrop-filter: blur(6px);
-      }
-
-      header {
-        display: flex;
-        justify-content: space-between;
-        align-items: baseline;
-        gap: 1rem;
-        margin-bottom: 1.25rem;
+        padding: 0.3rem 0.65rem;
+        border-radius: 999px;
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        background: rgba(255, 255, 255, 0.05);
       }
 
       h1 {
         margin: 0;
-        letter-spacing: 0.06em;
-        text-transform: uppercase;
-        font-size: 1.2rem;
-        color: #f3f0ff;
+        max-width: 11ch;
+        font-size: clamp(2.9rem, 7vw, 5.8rem);
+        line-height: 0.95;
+        letter-spacing: -0.04em;
       }
 
       .whisper {
-        margin: 0;
-        opacity: 0.82;
-        font-size: 0.95rem;
-        line-height: 1.55;
+        margin: 1rem 0 0;
+        max-width: 34rem;
+        font-size: clamp(1rem, 1.2vw, 1.18rem);
+        line-height: 1.72;
+        color: rgba(244, 236, 223, 0.86);
       }
 
-      .grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      .mantra {
+        margin: 1.25rem 0 0;
+        max-width: 32rem;
+        padding-left: 1rem;
+        border-left: 1px solid rgba(255, 255, 255, 0.16);
+        font-size: 0.98rem;
+        line-height: 1.7;
+        color: rgba(244, 236, 223, 0.7);
+      }
+
+      .seedline {
+        margin: 1.5rem 0 0;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem 1rem;
+        color: rgba(244, 236, 223, 0.7);
+        font-size: 0.76rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .controls {
+        margin-top: 1.5rem;
+        display: flex;
+        flex-wrap: wrap;
         gap: 0.75rem;
-        margin: 1.5rem 0 0.75rem;
       }
 
-      a.card {
-        text-decoration: none;
-        padding: 1rem 1.1rem;
-        border-radius: 10px;
-        border: 1px solid rgba(255, 255, 255, 0.08);
-        background: linear-gradient(
-          135deg,
-          rgba(255, 255, 255, 0.04),
-          rgba(255, 255, 255, 0.01)
-        );
+      button,
+      .artifact-dock a,
+      .secret-link {
+        appearance: none;
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        background: rgba(255, 255, 255, 0.04);
         color: inherit;
-        transition: all 160ms ease;
-        display: block;
+        border-radius: 999px;
+        padding: 0.78rem 1rem;
+        cursor: pointer;
+        text-decoration: none;
+        transition: transform 180ms ease, border-color 180ms ease, background 180ms ease, box-shadow 180ms ease;
       }
 
-      a.card:hover,
-      a.card:focus-visible {
-        border-color: rgba(127, 255, 212, 0.6);
-        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+      button:hover,
+      button:focus-visible,
+      .artifact-dock a:hover,
+      .artifact-dock a:focus-visible,
+      .secret-link:hover,
+      .secret-link:focus-visible {
         outline: none;
-        transform: translateY(-2px);
+        transform: translateY(-1px);
+        border-color: rgba(255, 255, 255, 0.35);
+        background: rgba(255, 255, 255, 0.08);
+        box-shadow: 0 10px 22px rgba(0, 0, 0, 0.24);
       }
 
-      .card h2 {
-        margin: 0 0 0.35rem;
-        font-size: 1rem;
-        letter-spacing: 0.04em;
-        color: #7fffd4;
+      .phase-button {
+        border-color: rgba(255, 255, 255, 0.18);
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.02));
       }
 
-      .card p {
+      .artifact-dock {
+        margin-top: 1.5rem;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.7rem;
+      }
+
+      .sigil-shell {
+        position: relative;
+        margin-top: 0.4rem;
+        border-radius: 1.6rem;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        background:
+          radial-gradient(circle at 50% 38%, rgba(255, 255, 255, 0.08), transparent 42%),
+          rgba(5, 7, 12, 0.75);
+        padding: 1rem;
+        min-height: min(68vh, 42rem);
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+      }
+
+      canvas {
+        width: 100%;
+        aspect-ratio: 1 / 1;
+        display: block;
+        border-radius: 1.25rem;
+      }
+
+      .phase-prompt {
+        position: absolute;
+        right: 1.2rem;
+        bottom: 1.2rem;
+        z-index: 1;
+      }
+
+      .drift {
+        margin-top: 1rem;
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.7rem;
+      }
+
+      .drift span {
+        display: block;
+        padding: 0.85rem 1rem;
+        border-radius: 1rem;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        background: rgba(255, 255, 255, 0.035);
+        font-size: 0.78rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: rgba(244, 236, 223, 0.74);
+        animation: driftUp 700ms ease both;
+        animation-delay: calc(var(--index) * 80ms);
+      }
+
+      .manifest-shell {
+        position: relative;
+        border-radius: 1.5rem;
+        padding: 1rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.95rem;
+        transition: transform 220ms ease, opacity 220ms ease;
+      }
+
+      .manifest-shell[data-open="false"] {
+        opacity: 0.88;
+      }
+
+      .manifest-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.14em;
+        font-size: 0.72rem;
+        color: var(--line);
+      }
+
+      .manifest-head strong {
+        font-weight: 600;
+      }
+
+      .manifest-copy {
         margin: 0;
-        font-size: 0.92rem;
-        line-height: 1.45;
-        opacity: 0.86;
+        font-size: 0.86rem;
+        line-height: 1.7;
+        color: rgba(244, 236, 223, 0.7);
       }
 
-      footer {
+      .manifest-list {
+        margin: 0;
+        display: grid;
+        gap: 0.55rem;
+      }
+
+      .manifest-row {
         display: flex;
         justify-content: space-between;
-        align-items: center;
         gap: 1rem;
-        margin-top: 1.5rem;
-        font-size: 0.9rem;
-        opacity: 0.75;
+        padding: 0.72rem 0.85rem;
+        border-radius: 1rem;
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid rgba(255, 255, 255, 0.06);
       }
 
-      code {
-        background: rgba(255, 255, 255, 0.05);
-        border-radius: 6px;
-        padding: 0.1rem 0.35rem;
+      .manifest-row dt {
+        color: rgba(244, 236, 223, 0.56);
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        font-size: 0.72rem;
+      }
+
+      .manifest-row dd {
+        margin: 0;
+        text-align: right;
+        color: rgba(244, 236, 223, 0.84);
+      }
+
+      .microcopy {
+        font-size: 0.72rem;
+        line-height: 1.8;
+        color: rgba(244, 236, 223, 0.62);
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .secret-shell {
+        position: fixed;
+        left: 1.25rem;
+        right: 1.25rem;
+        bottom: 1.25rem;
+        z-index: 3;
+        border-radius: 1.35rem;
+        padding: 1rem 1.15rem;
+        display: grid;
+        gap: 0.5rem;
+        max-width: 34rem;
+        transform: translateY(calc(100% + 2rem));
+        opacity: 0;
+        pointer-events: none;
+        transition: transform 260ms ease, opacity 260ms ease;
+      }
+
+      .secret-shell.is-visible {
+        transform: translateY(0);
+        opacity: 1;
+        pointer-events: auto;
+      }
+
+      .secret-shell h2 {
+        margin: 0;
+        font-size: 1rem;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: var(--accent);
+      }
+
+      .secret-shell p {
+        margin: 0;
+        line-height: 1.6;
+        color: rgba(244, 236, 223, 0.82);
+      }
+
+      .secret-meta {
+        color: rgba(244, 236, 223, 0.62);
+        font-size: 0.84rem;
+      }
+
+      .sr-only {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+      }
+
+      [data-phase="listen"] {
+        --shadow: rgba(4, 8, 20, 0.5);
+      }
+
+      [data-phase="cross"] {
+        --shadow: rgba(20, 6, 16, 0.58);
+      }
+
+      @keyframes driftUp {
+        from {
+          opacity: 0;
+          transform: translateY(10px);
+        }
+
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      @media (max-width: 1080px) {
+        .room {
+          grid-template-columns: 1fr;
+        }
+
+        .hero {
+          grid-template-columns: 1fr;
+        }
+
+        .manifest-shell {
+          position: fixed;
+          left: 1rem;
+          right: 1rem;
+          bottom: 1rem;
+          top: auto;
+          z-index: 4;
+          max-height: min(70vh, 32rem);
+          overflow: auto;
+        }
+
+        .manifest-shell[data-open="false"] {
+          transform: translateY(calc(100% + 2rem));
+          opacity: 0;
+          pointer-events: none;
+        }
+
+        .manifest-shell[data-open="true"] {
+          transform: translateY(0);
+          opacity: 1;
+          pointer-events: auto;
+        }
+
+        .secret-shell {
+          left: 1rem;
+          right: 1rem;
+          bottom: 5.75rem;
+        }
       }
 
       @media (max-width: 720px) {
-        main {
-          padding: 1.5rem;
+        .room {
+          padding: 0.9rem;
         }
 
-        footer {
+        .hero {
+          border-radius: 1.45rem;
+          padding: 1rem;
+        }
+
+        h1 {
+          max-width: none;
+          font-size: clamp(2.5rem, 12vw, 4.4rem);
+        }
+
+        .drift {
+          grid-template-columns: 1fr;
+        }
+
+        .seedline {
           flex-direction: column;
           align-items: flex-start;
+          gap: 0.4rem;
+        }
+
+        .controls,
+        .artifact-dock {
+          flex-direction: column;
+          align-items: stretch;
+        }
+
+        .sigil-shell {
+          min-height: auto;
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+          animation-duration: 1ms !important;
+          animation-iteration-count: 1 !important;
+          transition-duration: 1ms !important;
+          scroll-behavior: auto !important;
         }
       }
     </style>
+    <script src="thresholds.js" defer></script>
   </head>
-  <body>
-    <main>
-      <header>
-        <h1>Thresholds // Entry</h1>
-        <span aria-hidden="true">⟁⌘</span>
-      </header>
-      <p class="whisper">
-        A quiet doorway for the liminal experiments in this repository. Choose a
-        signal to follow:
-      </p>
+  <body data-phase="approach" data-motion="full">
+    <div class="grain" aria-hidden="true"></div>
+    <main class="room" data-testid="room-stage">
+      <section class="hero" aria-labelledby="room-title">
+        <div class="intro">
+          <div class="eyebrow">
+            Threshold Room
+            <span id="phase-chip" data-testid="phase-chip">approach</span>
+          </div>
+          <h1 id="room-title" data-testid="room-title"></h1>
+          <p class="whisper" id="room-whisper"></p>
+          <p class="mantra" id="room-mantra"></p>
+          <div class="seedline">
+            <span>seed <strong id="seed-value" data-testid="seed-value"></strong></span>
+            <span>motion <strong id="motion-value"></strong></span>
+            <span>glyph <strong id="glyph-value"></strong></span>
+          </div>
+          <div class="controls">
+            <button id="phase-button" class="phase-button" type="button">Advance phase</button>
+            <button id="reseed-button" type="button">Reseed the room</button>
+            <button id="manifest-button" type="button">Toggle manifest</button>
+          </div>
+          <div class="artifact-dock" aria-label="Artifacts">
+            <a href="Sigil/threshold.html">Open the observatory</a>
+            <a href="forgotten.html">Enter the memory chamber</a>
+            <a href="threshold.yaml">Read the raw manifest</a>
+          </div>
+        </div>
 
-      <section class="grid" aria-label="Portals">
-        <a class="card" href="Sigil/threshold.html">
-          <h2>Generative Sigil</h2>
-          <p>
-            Open the animated threshold—tweak colors, noise, and speed via query
-            parameters.
-          </p>
-        </a>
-        <a class="card" href="threshold.yaml">
-          <h2>Seed Manifest</h2>
-          <p>
-            Read the entropy, attention, and time values that describe the open
-            loop.
-          </p>
-        </a>
-        <a class="card" href="forgotten.html">
-          <h2>Forgotten Key</h2>
-          <p>A base64 link, left as an invitation. Decode gently.</p>
-        </a>
-        <a class="card" href="Sigil/glyph.txt">
-          <h2>Glyphs</h2>
-          <p>
-            Symbols that whisper the project's intent. Nothing more, nothing
-            less.
-          </p>
-        </a>
-        <a class="card" href="README.md">
-          <h2>Concept & Notes</h2>
-          <p>
-            Context for the threshold—what it feels like, and how to tend to it.
-          </p>
-        </a>
-        <a class="card" href="CONTRIBUTING.md">
-          <h2>Contribution Ritual</h2>
-          <p>
-            Stylistic guidance for adding new artifacts without breaking the
-            hush.
-          </p>
-        </a>
+        <div class="sigil-column">
+          <div class="sigil-shell">
+            <p class="sr-only" id="room-canvas-desc">
+              A seeded threshold sigil that bends toward the pointer and shifts as the phase changes.
+            </p>
+            <canvas id="room-canvas" data-testid="room-canvas" aria-describedby="room-canvas-desc"></canvas>
+            <button class="phase-prompt" id="canvas-prompt" type="button">Touch the field</button>
+          </div>
+          <div class="drift" id="drift-grid" aria-live="polite"></div>
+        </div>
       </section>
 
-      <footer>
-        <span
-          >Serve locally with <code>python -m http.server 8000</code> and open
-          <code>http://localhost:8000</code>.</span
-        >
-        <span>On GitHub Pages, this portal lives at the repository root.</span>
-      </footer>
+      <aside class="manifest-shell" id="manifest-panel" data-open="true" data-testid="manifest-panel">
+        <div class="manifest-head">
+          <strong>Live Manifest</strong>
+          <span id="manifest-status">listening</span>
+        </div>
+        <p class="manifest-copy">
+          The values are old. The room is not. Press M when you want this layer to step forward or away.
+        </p>
+        <dl class="manifest-list" id="manifest-list"></dl>
+        <p class="microcopy">
+          Click the room or the field to cycle phases. Wait, or hold a touch, if you want it to volunteer more.
+        </p>
+      </aside>
     </main>
+
+    <section class="secret-shell" id="secret-panel" aria-live="polite">
+      <h2>Soft secret</h2>
+      <p id="secret-copy"></p>
+      <p class="secret-meta" id="secret-meta"></p>
+      <a class="secret-link" id="secret-link" href="forgotten.html">Continue into the memory chamber</a>
+    </section>
+
+    <script>
+      window.addEventListener("DOMContentLoaded", () => {
+        const Engine = window.ThresholdsEngine;
+        const search = new URLSearchParams(window.location.search);
+        const reduceMotion =
+          window.matchMedia &&
+          window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+        const state = {
+          seed: Engine.sanitizeSeed(search.get("seed")) || Engine.generateSeed(),
+          phase: Engine.parsePhase(search.get("phase")),
+          persistSeed: search.has("seed"),
+          manifestOpen: window.innerWidth > 1080,
+          secretVisible: false,
+          manifestEntries: [],
+          memoryUrl: "",
+        };
+
+        const body = document.body;
+        const room = document.querySelector(".room");
+        const canvas = document.getElementById("room-canvas");
+        const title = document.getElementById("room-title");
+        const whisper = document.getElementById("room-whisper");
+        const mantra = document.getElementById("room-mantra");
+        const driftGrid = document.getElementById("drift-grid");
+        const phaseChip = document.getElementById("phase-chip");
+        const seedValue = document.getElementById("seed-value");
+        const motionValue = document.getElementById("motion-value");
+        const glyphValue = document.getElementById("glyph-value");
+        const manifestPanel = document.getElementById("manifest-panel");
+        const manifestList = document.getElementById("manifest-list");
+        const manifestStatus = document.getElementById("manifest-status");
+        const phaseButton = document.getElementById("phase-button");
+        const reseedButton = document.getElementById("reseed-button");
+        const manifestButton = document.getElementById("manifest-button");
+        const canvasPrompt = document.getElementById("canvas-prompt");
+        const secretPanel = document.getElementById("secret-panel");
+        const secretCopy = document.getElementById("secret-copy");
+        const secretMeta = document.getElementById("secret-meta");
+        const secretLink = document.getElementById("secret-link");
+
+        body.dataset.motion = reduceMotion ? "reduced" : "full";
+        motionValue.textContent = reduceMotion ? "reduced" : "full";
+
+        const renderer = Engine.createSigilRenderer({
+          canvas,
+          seed: state.seed,
+          phase: state.phase,
+          reducedMotion: reduceMotion,
+        });
+
+        let idleTimer = 0;
+        let holdTimer = 0;
+
+        function updateTheme() {
+          const palette = Engine.derivePalette(state.seed, state.phase);
+          body.style.setProperty("--bg", palette.background);
+          body.style.setProperty("--line", palette.line);
+          body.style.setProperty("--accent", palette.accent);
+          body.style.setProperty("--panel", palette.panel);
+          body.style.setProperty("--mist", palette.mist);
+        }
+
+        function renderManifest() {
+          const derived = Engine.deriveText(state.seed, state.phase);
+          const rows = state.manifestEntries.concat([
+            { key: "seed", value: state.seed },
+            { key: "phase", value: state.phase },
+            { key: "drift", value: derived.drift[0] },
+            { key: "palette", value: Engine.derivePalette(state.seed, state.phase).name },
+          ]);
+
+          manifestList.innerHTML = rows
+            .map(
+              (row) =>
+                `<div class="manifest-row"><dt>${row.key}</dt><dd>${row.value}</dd></div>`,
+            )
+            .join("");
+        }
+
+        function renderText() {
+          const text = Engine.deriveText(state.seed, state.phase);
+          title.textContent = text.title;
+          whisper.textContent = text.whisper;
+          mantra.textContent = text.mantra;
+          phaseChip.textContent = state.phase;
+          seedValue.textContent = state.seed;
+          glyphValue.textContent = text.glyph;
+          manifestStatus.textContent = state.phase;
+          canvasPrompt.textContent = `Touch the field :: ${state.phase}`;
+
+          driftGrid.innerHTML = text.drift
+            .map(
+              (entry, index) =>
+                `<span style="--index:${index}" aria-hidden="true">${entry}</span>`,
+            )
+            .join("");
+
+          if (state.secretVisible) {
+            secretCopy.textContent = text.secret;
+          }
+        }
+
+        function syncUrl() {
+          const next = new URL(window.location.href);
+          next.searchParams.set("phase", state.phase);
+          if (state.persistSeed) {
+            next.searchParams.set("seed", state.seed);
+          } else {
+            next.searchParams.delete("seed");
+          }
+          const target = `${next.pathname}${next.search}${next.hash}`;
+          window.history.replaceState({}, "", target);
+        }
+
+        function applyState() {
+          body.dataset.phase = state.phase;
+          updateTheme();
+          renderText();
+          renderManifest();
+          renderer.setState({
+            seed: state.seed,
+            phase: state.phase,
+            reducedMotion: reduceMotion,
+          });
+          manifestPanel.dataset.open = String(state.manifestOpen);
+          syncUrl();
+        }
+
+        function cyclePhase() {
+          state.phase = Engine.nextPhase(state.phase);
+          applyState();
+          resetIdleTimer();
+        }
+
+        function revealSecret(source) {
+          state.secretVisible = true;
+          secretPanel.classList.add("is-visible");
+          const text = Engine.deriveText(state.seed, state.phase);
+          secretCopy.textContent = text.secret;
+          secretMeta.textContent =
+            source === "hold"
+              ? "The room answered a held touch."
+              : "The room offered this while you were still.";
+          secretLink.href = state.memoryUrl || "forgotten.html";
+          secretLink.textContent = state.memoryUrl
+            ? `Follow the old address :: ${state.memoryUrl}`
+            : "Continue into the memory chamber";
+        }
+
+        function resetIdleTimer() {
+          window.clearTimeout(idleTimer);
+          idleTimer = window.setTimeout(
+            () => revealSecret("idle"),
+            reduceMotion ? 14000 : 9000,
+          );
+        }
+
+        function clearHoldTimer() {
+          window.clearTimeout(holdTimer);
+          holdTimer = 0;
+        }
+
+        async function loadArtifacts() {
+          const [manifestResponse, keyResponse] = await Promise.allSettled([
+            fetch("threshold.yaml"),
+            fetch("forgotten.key"),
+          ]);
+
+          if (manifestResponse.status === "fulfilled" && manifestResponse.value.ok) {
+            const manifestText = await manifestResponse.value.text();
+            state.manifestEntries = Engine.parseManifest(manifestText);
+          } else {
+            state.manifestEntries = [
+              { key: "manifest", value: "unheard" },
+              { key: "loop", value: "half-open" },
+            ];
+          }
+
+          if (keyResponse.status === "fulfilled" && keyResponse.value.ok) {
+            const keyText = await keyResponse.value.text();
+            state.memoryUrl = Engine.decodeBase64(keyText);
+          }
+
+          renderManifest();
+        }
+
+        room.addEventListener("pointermove", (event) => {
+          const rect = canvas.getBoundingClientRect();
+          renderer.setPointer({
+            x: (event.clientX - rect.left) / rect.width,
+            y: (event.clientY - rect.top) / rect.height,
+            active: true,
+          });
+          resetIdleTimer();
+        });
+
+        room.addEventListener("pointerleave", () => {
+          renderer.clearPointer();
+        });
+
+        room.addEventListener("pointerdown", (event) => {
+          if (event.target.closest("a, button")) return;
+          resetIdleTimer();
+          clearHoldTimer();
+          holdTimer = window.setTimeout(() => revealSecret("hold"), 850);
+        });
+
+        room.addEventListener("pointerup", clearHoldTimer);
+        room.addEventListener("pointercancel", clearHoldTimer);
+
+        room.addEventListener("click", (event) => {
+          if (event.target.closest("a, button")) return;
+          cyclePhase();
+        });
+
+        phaseButton.addEventListener("click", cyclePhase);
+        canvasPrompt.addEventListener("click", cyclePhase);
+        reseedButton.addEventListener("click", () => {
+          state.seed = Engine.generateSeed();
+          applyState();
+          resetIdleTimer();
+        });
+        manifestButton.addEventListener("click", () => {
+          state.manifestOpen = !state.manifestOpen;
+          manifestPanel.dataset.open = String(state.manifestOpen);
+          resetIdleTimer();
+        });
+
+        window.addEventListener("keydown", (event) => {
+          if (event.key.toLowerCase() === "r") {
+            state.seed = Engine.generateSeed();
+            applyState();
+          }
+          if (event.key.toLowerCase() === "m") {
+            state.manifestOpen = !state.manifestOpen;
+            manifestPanel.dataset.open = String(state.manifestOpen);
+          }
+          resetIdleTimer();
+        });
+
+        window.addEventListener("resize", () => {
+          if (window.innerWidth > 1080 && !state.secretVisible) {
+            state.manifestOpen = true;
+          }
+          manifestPanel.dataset.open = String(state.manifestOpen);
+        });
+
+        applyState();
+        loadArtifacts();
+        resetIdleTimer();
+      });
+    </script>
   </body>
 </html>

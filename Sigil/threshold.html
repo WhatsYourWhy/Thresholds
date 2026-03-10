@@ -1,251 +1,411 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Threshold Sigil</title>
+    <title>Threshold Observatory</title>
     <style>
       :root {
         color-scheme: dark;
+        --bg: #0b1020;
+        --line: #95f2ff;
+        --accent: #ffd089;
+        --panel: rgba(8, 12, 20, 0.76);
       }
 
       * {
         box-sizing: border-box;
       }
 
+      html,
       body {
         margin: 0;
-        background: #0b0c12;
-        color: #e8e7e3;
-        font-family: "Inter", "Helvetica Neue", Arial, sans-serif;
-        overflow: hidden;
-        display: flex;
-        flex-direction: column;
+        min-height: 100%;
+      }
+
+      body {
         min-height: 100vh;
+        background:
+          radial-gradient(circle at 15% 20%, rgba(255, 255, 255, 0.05), transparent 20%),
+          linear-gradient(155deg, #05070d 0%, var(--bg) 55%, #140d15 100%);
+        color: #f4ecdf;
+        font-family: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Georgia, serif;
+        overflow: hidden;
+      }
+
+      .grain {
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        opacity: 0.12;
+        background-image:
+          linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+        background-size: 4px 4px, 6px 6px;
+      }
+
+      .layout {
+        position: relative;
+        z-index: 1;
+        min-height: 100vh;
+        display: grid;
+        grid-template-columns: minmax(280px, 360px) minmax(0, 1fr);
+      }
+
+      .panel {
+        padding: 1.2rem;
+        background: linear-gradient(180deg, rgba(7, 10, 18, 0.92), var(--panel));
+        border-right: 1px solid rgba(255, 255, 255, 0.08);
+        display: grid;
+        align-content: start;
+        gap: 1rem;
+        backdrop-filter: blur(10px);
+      }
+
+      .micro,
+      button,
+      a,
+      .legend {
+        font-family: "IBM Plex Mono", "Cascadia Code", "Fira Code", Consolas, monospace;
+      }
+
+      .micro {
+        font-size: 0.72rem;
+        text-transform: uppercase;
+        letter-spacing: 0.18em;
+        color: var(--line);
+      }
+
+      h1 {
+        margin: 0;
+        font-size: clamp(2.4rem, 6vw, 4.6rem);
+        line-height: 0.96;
+        letter-spacing: -0.04em;
+      }
+
+      p {
+        margin: 0;
+        line-height: 1.65;
+        color: rgba(244, 236, 223, 0.78);
+      }
+
+      .controls,
+      .manifest-list {
+        display: grid;
+        gap: 0.7rem;
+      }
+
+      button,
+      a {
+        appearance: none;
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        border-radius: 999px;
+        padding: 0.8rem 1rem;
+        color: inherit;
+        text-decoration: none;
+        background: rgba(255, 255, 255, 0.04);
+        cursor: pointer;
+        transition: transform 180ms ease, background 180ms ease, border-color 180ms ease;
+      }
+
+      button:hover,
+      button:focus-visible,
+      a:hover,
+      a:focus-visible {
+        outline: none;
+        transform: translateY(-1px);
+        background: rgba(255, 255, 255, 0.1);
+        border-color: rgba(255, 255, 255, 0.3);
+      }
+
+      .manifest-list {
+        margin: 0;
+      }
+
+      .manifest-list div {
+        display: flex;
+        justify-content: space-between;
+        gap: 0.75rem;
+        padding: 0.7rem 0.8rem;
+        border-radius: 1rem;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+      }
+
+      .manifest-list dt {
+        color: rgba(244, 236, 223, 0.58);
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        font-size: 0.72rem;
+      }
+
+      .manifest-list dd {
+        margin: 0;
+        text-align: right;
+      }
+
+      .viewport {
+        position: relative;
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        padding: 1.1rem;
+      }
+
+      .frame {
+        width: min(100%, 72rem);
+        height: min(90vh, 52rem);
+        border-radius: 1.8rem;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        background:
+          radial-gradient(circle at 50% 38%, rgba(255, 255, 255, 0.08), transparent 44%),
+          rgba(3, 5, 10, 0.55);
+        box-shadow: 0 24px 80px rgba(0, 0, 0, 0.42);
+        overflow: hidden;
         position: relative;
       }
 
-      header {
-        padding: 0.75rem 1rem;
-        opacity: 0.8;
-        letter-spacing: 0.04em;
-        font-size: 0.9rem;
-        text-transform: uppercase;
-      }
-
       canvas {
-        flex: 1;
         width: 100%;
         height: 100%;
-        min-height: 0;
         display: block;
       }
 
       .legend {
         position: absolute;
-        bottom: 0.75rem;
         right: 1rem;
-        background: rgba(10, 12, 18, 0.78);
+        bottom: 1rem;
+        max-width: min(32rem, calc(100% - 2rem));
+        padding: 0.85rem 1rem;
+        border-radius: 1rem;
         border: 1px solid rgba(255, 255, 255, 0.08);
-        border-radius: 8px;
-        padding: 0.5rem 0.75rem;
-        font-size: 0.8rem;
-        line-height: 1.35;
-        max-width: min(420px, 90vw);
-        word-break: break-word;
-        backdrop-filter: blur(4px);
-        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.4);
-        pointer-events: none;
+        background: rgba(7, 10, 18, 0.78);
+        backdrop-filter: blur(10px);
+        line-height: 1.6;
+        color: rgba(244, 236, 223, 0.82);
       }
 
-      .sr-only {
-        position: absolute;
-        width: 1px;
-        height: 1px;
-        padding: 0;
-        margin: -1px;
-        overflow: hidden;
-        clip: rect(0, 0, 0, 0);
-        white-space: nowrap;
-        border: 0;
+      @media (max-width: 960px) {
+        body {
+          overflow: auto;
+        }
+
+        .layout {
+          grid-template-columns: 1fr;
+        }
+
+        .panel {
+          border-right: 0;
+          border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .viewport {
+          min-height: auto;
+        }
+
+        .frame {
+          height: min(72vh, 34rem);
+        }
       }
     </style>
+    <script src="../thresholds.js" defer></script>
   </head>
   <body>
-    <header>Threshold Sigil // minimal generative sigil</header>
-    <p class="sr-only" id="sigil-desc">
-      A looping generative sigil radiates lines from a soft center, pulsing with
-      color shifts defined by quiet parameters.
-    </p>
-    <canvas id="sigil" aria-describedby="sigil-desc"></canvas>
-    <div class="legend" id="legend"></div>
+    <div class="grain" aria-hidden="true"></div>
+    <div class="layout">
+      <aside class="panel">
+        <div class="micro">Threshold Observatory</div>
+        <h1 id="observatory-title">The room, from farther away.</h1>
+        <p id="observatory-copy">
+          Legacy query parameters still work here, but the sigil now uses the same seeded ritual engine as the room itself.
+        </p>
+        <div class="controls">
+          <button id="phase-button" type="button">Advance phase</button>
+          <button id="reseed-button" type="button">Reseed</button>
+          <button id="manifest-button" type="button">Toggle manifest</button>
+          <a href="../index.html">Return to the room</a>
+        </div>
+        <dl class="manifest-list" id="manifest-list"></dl>
+      </aside>
+      <section class="viewport">
+        <div class="frame">
+          <canvas id="sigil" data-testid="sigil-canvas"></canvas>
+          <div class="legend" id="legend"></div>
+        </div>
+      </section>
+    </div>
 
     <script>
-      // Minimal configuration with URL overrides for quick experimentation.
-      const defaults = {
-        background: "#0b0c12",
-        line: "#7fffd4",
-        accent: "#ff6bcb",
-        iterations: 144,
-        orbitRadius: 0.32,
-        noise: 0.38,
-        speed: 0.45,
-      };
+      window.addEventListener("DOMContentLoaded", () => {
+        const Engine = window.ThresholdsEngine;
+        const search = new URLSearchParams(window.location.search);
+        const reduceMotion =
+          window.matchMedia &&
+          window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-      const params = new URLSearchParams(window.location.search);
+        const rawOverrides = {
+          background: search.get("background"),
+          line: search.get("line"),
+          accent: search.get("accent"),
+          iterations: search.get("iterations"),
+          orbitRadius: search.get("orbitRadius"),
+          noise: search.get("noise"),
+          speed: search.get("speed"),
+        };
 
-      function parseColor(input, fallback) {
-        if (!input || typeof input !== "string") return fallback;
-        const clean = input.trim().replace(/^#/, "");
-        const isValidHex = /^[0-9a-fA-F]+$/.test(clean);
-        if (!isValidHex || (clean.length !== 3 && clean.length !== 6)) {
-          return fallback;
-        }
-        const expanded =
-          clean.length === 3
-            ? clean
-                .split("")
-                .map((char) => `${char}${char}`)
-                .join("")
-            : clean;
-        return `#${expanded.toLowerCase()}`;
-      }
+        const overrides = {
+          background: Engine.parseColor(rawOverrides.background, null),
+          line: Engine.parseColor(rawOverrides.line, null),
+          accent: Engine.parseColor(rawOverrides.accent, null),
+          iterations: Engine.parseNumber(rawOverrides.iterations, undefined, { min: 24, max: 720 }),
+          orbitRadius: Engine.parseNumber(rawOverrides.orbitRadius, undefined, { min: 0, max: 1 }),
+          noise: Engine.parseNumber(rawOverrides.noise, undefined, { min: 0, max: 1 }),
+          speed: Engine.parseNumber(rawOverrides.speed, undefined, { min: 0, max: 3 }),
+        };
 
-      function parseNumber(input, fallback, bounds = {}) {
-        if (input === null || input === undefined || input === "") {
-          return fallback;
-        }
-        const parsed = Number(input);
-        if (!Number.isFinite(parsed)) return fallback;
-        const { min, max } = bounds;
-        let clamped = parsed;
-        if (typeof min === "number") clamped = Math.max(min, clamped);
-        if (typeof max === "number") clamped = Math.min(max, clamped);
-        return clamped;
-      }
-
-      const config = {
-        background: parseColor(params.get("background"), defaults.background),
-        line: parseColor(params.get("line"), defaults.line),
-        accent: parseColor(params.get("accent"), defaults.accent),
-        iterations: Math.round(
-          parseNumber(params.get("iterations"), defaults.iterations, {
-            min: 24,
-            max: 720,
-          }),
-        ),
-        orbitRadius: parseNumber(
-          params.get("orbitRadius"),
-          defaults.orbitRadius,
-          { min: 0, max: 1 },
-        ),
-        noise: parseNumber(params.get("noise"), defaults.noise, {
-          min: 0,
-          max: 1,
-        }),
-        speed: parseNumber(params.get("speed"), defaults.speed, {
-          min: 0,
-          max: 3,
-        }),
-      };
-
-      const canvas = document.getElementById("sigil");
-      const ctx = canvas.getContext("2d");
-      const legend = document.getElementById("legend");
-      let dpr = window.devicePixelRatio || 1;
-
-      function veilBackground() {
-        const width = canvas.width / dpr;
-        const height = canvas.height / dpr;
-        ctx.save();
-        ctx.globalAlpha = 1;
-        ctx.fillStyle = config.background;
-        ctx.fillRect(0, 0, width, height);
-        ctx.restore();
-      }
-
-      function resize() {
-        dpr = window.devicePixelRatio || 1;
-        const { width, height } = canvas.getBoundingClientRect();
-        canvas.width = Math.max(1, Math.round(width * dpr));
-        canvas.height = Math.max(1, Math.round(height * dpr));
-        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-        veilBackground();
-      }
-
-      let frame = 0;
-      const dots = [];
-
-      function seedDots(count) {
-        const total = Math.max(1, count);
-        dots.length = 0;
-        for (let i = 0; i < total; i++) {
-          const theta = (i / total) * Math.PI * 2;
-          const radius =
-            Math.sin(theta * 3 + i * 0.03) * 0.25 + config.orbitRadius;
-          dots.push({ theta, radius, drift: Math.random() * Math.PI * 2 });
-        }
-      }
-
-      function lerp(a, b, t) {
-        return a + (b - a) * t;
-      }
-
-      function loop() {
-        const w = canvas.width / dpr;
-        const h = canvas.height / dpr;
-        ctx.save();
-        ctx.globalAlpha = 0.08;
-        ctx.fillStyle = config.background;
-        ctx.fillRect(0, 0, w, h);
-        ctx.restore();
-
-        const cx = w / 2;
-        const cy = h / 2;
-        const scale = Math.min(w, h) * 0.45;
-
-        ctx.save();
-        ctx.translate(cx, cy);
-        ctx.rotate(Math.sin(frame * 0.001) * 0.03);
-
-        dots.forEach((dot, i) => {
-          const wobble = Math.sin(frame * 0.002 + dot.theta * 2) * config.noise;
-          const r = lerp(dot.radius, dot.radius + wobble * 0.1, 0.6) * scale;
-          const a =
-            dot.theta +
-            Math.sin(dot.drift + frame * 0.003) * config.noise * 0.35;
-          const x = Math.cos(a) * r;
-          const y = Math.sin(a) * r;
-
-          ctx.beginPath();
-          ctx.moveTo(0, 0);
-          ctx.lineTo(x, y);
-          ctx.strokeStyle = i % 9 === 0 ? config.accent : config.line;
-          ctx.lineWidth = i % 18 === 0 ? 2.25 : 1.1;
-          ctx.globalAlpha = 0.9;
-          ctx.stroke();
-
-          ctx.beginPath();
-          ctx.arc(x, y, 2.4, 0, Math.PI * 2);
-          ctx.fillStyle = i % 9 === 0 ? config.accent : config.line;
-          ctx.globalAlpha = 0.85;
-          ctx.fill();
+        Object.keys(overrides).forEach((key) => {
+          if (overrides[key] === null || overrides[key] === undefined) {
+            delete overrides[key];
+          }
         });
 
-        ctx.restore();
-        frame += config.speed;
-        requestAnimationFrame(loop);
-      }
+        const state = {
+          seed: Engine.sanitizeSeed(search.get("seed")) || Engine.generateSeed(),
+          phase: Engine.parsePhase(search.get("phase")),
+          persistSeed: search.has("seed"),
+          overrides,
+          manifestOpen: true,
+          manifestEntries: [],
+        };
 
-      function updateLegend() {
-        legend.textContent = `bg ${config.background}  |  line ${config.line}  |  accent ${config.accent}  |  iterations ${config.iterations}  |  orbit ${config.orbitRadius.toFixed(2)}  |  noise ${config.noise.toFixed(2)}  |  speed ${config.speed.toFixed(2)}`;
-      }
+        const canvas = document.getElementById("sigil");
+        const title = document.getElementById("observatory-title");
+        const copy = document.getElementById("observatory-copy");
+        const legend = document.getElementById("legend");
+        const manifestList = document.getElementById("manifest-list");
+        const phaseButton = document.getElementById("phase-button");
+        const reseedButton = document.getElementById("reseed-button");
+        const manifestButton = document.getElementById("manifest-button");
 
-      window.addEventListener("resize", resize);
-      resize();
-      seedDots(config.iterations);
-      updateLegend();
-      requestAnimationFrame(loop);
+        const renderer = Engine.createSigilRenderer({
+          canvas,
+          seed: state.seed,
+          phase: state.phase,
+          reducedMotion: reduceMotion,
+          overrides: state.overrides,
+        });
+
+        function updateTheme() {
+          const palette = Engine.derivePalette(state.seed, state.phase, state.overrides);
+          document.body.style.setProperty("--bg", palette.background);
+          document.body.style.setProperty("--line", palette.line);
+          document.body.style.setProperty("--accent", palette.accent);
+          document.body.style.setProperty("--panel", palette.panel);
+        }
+
+        function renderManifest() {
+          const rows = state.manifestEntries.concat([
+            { key: "seed", value: state.seed },
+            { key: "phase", value: state.phase },
+            { key: "iterations", value: renderer.getState().config.iterations },
+            { key: "noise", value: renderer.getState().config.noise.toFixed(2) },
+          ]);
+
+          manifestList.innerHTML = rows
+            .map((row) => `<div><dt>${row.key}</dt><dd>${row.value}</dd></div>`)
+            .join("");
+        }
+
+        function syncUrl() {
+          const next = new URL(window.location.href);
+          next.searchParams.set("phase", state.phase);
+          if (state.persistSeed) {
+            next.searchParams.set("seed", state.seed);
+          } else {
+            next.searchParams.delete("seed");
+          }
+          Object.entries(rawOverrides).forEach(([key, value]) => {
+            if (value) next.searchParams.set(key, value);
+            else next.searchParams.delete(key);
+          });
+          window.history.replaceState({}, "", `${next.pathname}${next.search}${next.hash}`);
+        }
+
+        function renderCopy() {
+          const text = Engine.deriveText(state.seed, state.phase);
+          title.textContent = text.title;
+          copy.textContent = text.whisper;
+          const config = renderer.getState().config;
+          legend.textContent = `seed ${state.seed} | phase ${state.phase} | bg ${config.palette.background} | line ${config.palette.line} | accent ${config.palette.accent} | iterations ${config.iterations} | orbit ${config.orbitRadius.toFixed(2)} | noise ${config.noise.toFixed(2)} | speed ${config.speed.toFixed(2)}`;
+        }
+
+        function applyState() {
+          updateTheme();
+          renderer.setState({
+            seed: state.seed,
+            phase: state.phase,
+            reducedMotion: reduceMotion,
+            overrides: state.overrides,
+          });
+          renderCopy();
+          renderManifest();
+          syncUrl();
+        }
+
+        async function loadManifest() {
+          try {
+            const response = await fetch("../threshold.yaml");
+            const text = await response.text();
+            state.manifestEntries = Engine.parseManifest(text);
+          } catch (error) {
+            state.manifestEntries = [
+              { key: "manifest", value: "unheard" },
+              { key: "loop", value: "half-open" },
+            ];
+          }
+          renderManifest();
+        }
+
+        function cyclePhase() {
+          state.phase = Engine.nextPhase(state.phase);
+          applyState();
+        }
+
+        phaseButton.addEventListener("click", cyclePhase);
+        reseedButton.addEventListener("click", () => {
+          state.seed = Engine.generateSeed();
+          applyState();
+        });
+        manifestButton.addEventListener("click", () => {
+          state.manifestOpen = !state.manifestOpen;
+          manifestList.hidden = !state.manifestOpen;
+        });
+
+        canvas.addEventListener("click", cyclePhase);
+        canvas.addEventListener("pointermove", (event) => {
+          const rect = canvas.getBoundingClientRect();
+          renderer.setPointer({
+            x: (event.clientX - rect.left) / rect.width,
+            y: (event.clientY - rect.top) / rect.height,
+            active: true,
+          });
+        });
+        canvas.addEventListener("pointerleave", () => renderer.clearPointer());
+
+        window.addEventListener("keydown", (event) => {
+          if (event.key.toLowerCase() === "r") {
+            state.seed = Engine.generateSeed();
+            applyState();
+          }
+          if (event.key.toLowerCase() === "m") {
+            state.manifestOpen = !state.manifestOpen;
+            manifestList.hidden = !state.manifestOpen;
+          }
+        });
+
+        applyState();
+        loadManifest();
+      });
     </script>
   </body>
 </html>
