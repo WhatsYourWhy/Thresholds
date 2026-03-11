@@ -65,7 +65,7 @@ test.describe("threshold room", () => {
     await new Promise((resolve) => listening.server.close(resolve));
   });
 
-  test("renders the room and advances phase", async ({ page }) => {
+  test("renders the room and keyboard shortcuts stay active", async ({ page }) => {
     const url = `http://localhost:${listening.port}/index.html?seed=door-salt&phase=approach`;
     await page.goto(url);
 
@@ -74,6 +74,7 @@ test.describe("threshold room", () => {
 
     const title = page.locator("[data-testid='room-title']");
     const firstTitle = await title.textContent();
+    const firstSeed = await page.locator("#seed-value").textContent();
 
     await page.locator("#phase-button").click();
     await expect(page.locator("body")).toHaveAttribute("data-phase", "listen");
@@ -89,6 +90,32 @@ test.describe("threshold room", () => {
       "data-open",
       before === "true" ? "false" : "true",
     );
+
+    await page.keyboard.press("KeyR");
+    await expect(page.locator("#seed-value")).not.toHaveText(firstSeed || "");
+  });
+
+  test("soft secret can be dismissed without blocking the room", async ({ page }) => {
+    const url = `http://localhost:${listening.port}/index.html?seed=door-salt&phase=approach`;
+    await page.goto(url);
+
+    await page.evaluate(() => {
+      window.__thresholdRoomTest.revealSecret("test");
+    });
+
+    const secret = page.locator("#secret-panel");
+    await expect(secret).toHaveClass(/is-visible/);
+
+    await page.locator("#phase-button").click();
+    await expect(page.locator("body")).toHaveAttribute("data-phase", "listen");
+    await expect(secret).not.toHaveClass(/is-visible/);
+
+    await page.evaluate(() => {
+      window.__thresholdRoomTest.revealSecret("test");
+    });
+    await expect(secret).toHaveClass(/is-visible/);
+    await page.keyboard.press("Escape");
+    await expect(secret).not.toHaveClass(/is-visible/);
   });
 
   test("same seed and phase produce the same text fragments", async ({ page }) => {
@@ -217,5 +244,8 @@ test.describe("mobile thresholds", () => {
     );
   });
 });
+
+
+
 
 

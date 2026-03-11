@@ -130,8 +130,7 @@
       .controls button,
       .artifact-dock,
       .manifest-shell,
-      .secret-shell,
-      .seedline {
+      .secret-shell {
         font-family: "IBM Plex Mono", "Cascadia Code", "Fira Code", Consolas, monospace;
       }
 
@@ -365,14 +364,13 @@
       .secret-shell {
         position: fixed;
         left: 1.25rem;
-        right: 1.25rem;
         bottom: 1.25rem;
         z-index: 3;
+        width: min(28rem, calc(100vw - 2.5rem));
         border-radius: 1.35rem;
         padding: 1rem 1.15rem;
         display: grid;
         gap: 0.5rem;
-        max-width: 34rem;
         transform: translateY(calc(100% + 2rem));
         opacity: 0;
         pointer-events: none;
@@ -382,7 +380,22 @@
       .secret-shell.is-visible {
         transform: translateY(0);
         opacity: 1;
+      }
+
+      .secret-shell > * {
+        pointer-events: none;
+      }
+
+      .secret-close,
+      .secret-link {
         pointer-events: auto;
+      }
+
+      .secret-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.75rem;
       }
 
       .secret-shell h2 {
@@ -391,6 +404,26 @@
         letter-spacing: 0.16em;
         text-transform: uppercase;
         color: var(--accent);
+      }
+
+      .secret-close {
+        appearance: none;
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        border-radius: 999px;
+        padding: 0.45rem 0.8rem;
+        background: rgba(255, 255, 255, 0.04);
+        color: rgba(244, 236, 223, 0.8);
+        cursor: pointer;
+        font: inherit;
+        transition: transform 180ms ease, background 180ms ease, border-color 180ms ease;
+      }
+
+      .secret-close:hover,
+      .secret-close:focus-visible {
+        outline: none;
+        transform: translateY(-1px);
+        background: rgba(255, 255, 255, 0.08);
+        border-color: rgba(255, 255, 255, 0.3);
       }
 
       .secret-shell p {
@@ -471,6 +504,7 @@
         .secret-shell {
           left: 1rem;
           right: 1rem;
+          width: auto;
           bottom: 5.75rem;
         }
       }
@@ -581,7 +615,10 @@
     </main>
 
     <section class="secret-shell" id="secret-panel" aria-live="polite">
-      <h2>Soft secret</h2>
+      <div class="secret-head">
+        <h2>Soft secret</h2>
+        <button class="secret-close" id="secret-close" type="button" aria-label="Dismiss soft secret">Dismiss</button>
+      </div>
       <p id="secret-copy"></p>
       <p class="secret-meta" id="secret-meta"></p>
       <a class="secret-link" id="secret-link" href="forgotten.html">Continue into the memory chamber</a>
@@ -627,6 +664,7 @@
         const secretCopy = document.getElementById("secret-copy");
         const secretMeta = document.getElementById("secret-meta");
         const secretLink = document.getElementById("secret-link");
+        const secretClose = document.getElementById("secret-close");
         const observatoryLink = document.getElementById("observatory-link");
         const memoryLink = document.getElementById("memory-link");
 
@@ -642,6 +680,9 @@
 
         let idleTimer = 0;
         let holdTimer = 0;
+        let secretTimer = 0;
+
+        room.tabIndex = -1;
 
         function updateTheme() {
           const palette = Engine.derivePalette(state.seed, state.phase);
@@ -736,7 +777,28 @@
           syncUrl();
         }
 
+        function focusShortcutLayer() {
+          const active = document.activeElement;
+          if (active && active.matches && active.matches("input, textarea, select, [contenteditable='true']")) {
+            return;
+          }
+          room.focus({ preventScroll: true });
+        }
+
+        function hideSecret() {
+          state.secretVisible = false;
+          secretPanel.classList.remove("is-visible");
+          window.clearTimeout(secretTimer);
+          updateNavigation();
+        }
+
+        function scheduleSecretHide() {
+          window.clearTimeout(secretTimer);
+          secretTimer = window.setTimeout(() => hideSecret(), reduceMotion ? 12000 : 8000);
+        }
+
         function cyclePhase() {
+          hideSecret();
           state.phase = Engine.nextPhase(state.phase);
           applyState();
           resetIdleTimer();
@@ -749,14 +811,26 @@
           secretCopy.textContent = text.secret;
           secretMeta.textContent =
             source === "hold"
-              ? "The room answered a held touch."
-              : "The room offered this while you were still.";
+              ? "The room answered a held touch. Press Esc to dismiss it."
+              : "The room offered this while you were still. Press Esc to dismiss it.";
           const fallbackMemory = `forgotten.html?seed=${state.seed}&phase=${state.phase}`;
           secretLink.href = state.memoryUrl || fallbackMemory;
           secretLink.textContent = state.memoryUrl
             ? `Follow the old address :: ${state.memoryUrl}`
             : "Continue into the memory chamber";
+          scheduleSecretHide();
         }
+
+        window.__thresholdRoomTest = {
+          revealSecret,
+          hideSecret,
+          getState: () => ({
+            seed: state.seed,
+            phase: state.phase,
+            manifestOpen: state.manifestOpen,
+            secretVisible: state.secretVisible,
+          }),
+        };
 
         function resetIdleTimer() {
           window.clearTimeout(idleTimer);
@@ -810,7 +884,9 @@
         });
 
         room.addEventListener("pointerdown", (event) => {
+          focusShortcutLayer();
           if (event.target.closest("a, button")) return;
+          hideSecret();
           resetIdleTimer();
           clearHoldTimer();
           holdTimer = window.setTimeout(() => revealSecret("hold"), 850);
@@ -824,30 +900,68 @@
           cyclePhase();
         });
 
-        phaseButton.addEventListener("click", cyclePhase);
-        canvasPrompt.addEventListener("click", cyclePhase);
+        phaseButton.addEventListener("click", () => {
+          cyclePhase();
+          focusShortcutLayer();
+        });
+        canvasPrompt.addEventListener("click", () => {
+          cyclePhase();
+          focusShortcutLayer();
+        });
         reseedButton.addEventListener("click", () => {
+          hideSecret();
           state.seed = Engine.generateSeed();
           applyState();
           resetIdleTimer();
+          focusShortcutLayer();
         });
         manifestButton.addEventListener("click", () => {
+          hideSecret();
           state.manifestOpen = !state.manifestOpen;
           manifestPanel.dataset.open = String(state.manifestOpen);
+          renderText();
           resetIdleTimer();
+          focusShortcutLayer();
+        });
+        secretClose.addEventListener("click", () => {
+          hideSecret();
+          focusShortcutLayer();
         });
 
-        window.addEventListener("keydown", (event) => {
-          if (event.key.toLowerCase() === "r") {
+        function handleShortcut(event) {
+          if (event.defaultPrevented || event.metaKey || event.ctrlKey || event.altKey) {
+            return;
+          }
+          const target = event.target;
+          if (target && target.matches && target.matches("input, textarea, select, [contenteditable='true']")) {
+            return;
+          }
+          const key = typeof event.key === "string" ? event.key.toLowerCase() : "";
+          const code = typeof event.code === "string" ? event.code : "";
+          if (key === "r" || code === "KeyR") {
+            event.preventDefault();
+            hideSecret();
             state.seed = Engine.generateSeed();
             applyState();
+            resetIdleTimer();
+            return;
           }
-          if (event.key.toLowerCase() === "m") {
+          if (key === "m" || code === "KeyM") {
+            event.preventDefault();
+            hideSecret();
             state.manifestOpen = !state.manifestOpen;
             manifestPanel.dataset.open = String(state.manifestOpen);
+            renderText();
+            resetIdleTimer();
+            return;
           }
-          resetIdleTimer();
-        });
+          if (key === "escape" || code === "Escape") {
+            event.preventDefault();
+            hideSecret();
+          }
+        }
+
+        window.addEventListener("keydown", handleShortcut, { capture: true });
 
         window.addEventListener("resize", () => {
           if (window.innerWidth > 1080 && !state.secretVisible) {
@@ -859,9 +973,15 @@
         applyState();
         loadArtifacts();
         resetIdleTimer();
+        focusShortcutLayer();
       });
     </script>
   </body>
 </html>
+
+
+
+
+
 
 
