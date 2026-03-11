@@ -223,7 +223,8 @@
           <button id="phase-button" type="button">Advance phase</button>
           <button id="reseed-button" type="button">Reseed</button>
           <button id="manifest-button" type="button">Toggle manifest</button>
-          <a href="../index.html">Return to the room</a>
+          <a id="room-link" href="../index.html">Return to the room</a>
+          <a id="memory-link" href="../forgotten.html">Enter the memory chamber</a>
         </div>
         <dl class="manifest-list" id="manifest-list"></dl>
       </aside>
@@ -286,6 +287,8 @@
         const phaseButton = document.getElementById("phase-button");
         const reseedButton = document.getElementById("reseed-button");
         const manifestButton = document.getElementById("manifest-button");
+        const roomLink = document.getElementById("room-link");
+        const memoryLink = document.getElementById("memory-link");
 
         const renderer = Engine.createSigilRenderer({
           canvas,
@@ -336,7 +339,20 @@
           title.textContent = text.title;
           copy.textContent = text.whisper;
           const config = renderer.getState().config;
+          const nextPhase = Engine.nextPhase(state.phase);
+          phaseButton.textContent = `Advance to ${nextPhase}`;
+          reseedButton.textContent = "Reseed (R)";
+          manifestButton.textContent = state.manifestOpen ? "Hide manifest (M)" : "Show manifest (M)";
           legend.textContent = `seed ${state.seed} | phase ${state.phase} | bg ${config.palette.background} | line ${config.palette.line} | accent ${config.palette.accent} | iterations ${config.iterations} | orbit ${config.orbitRadius.toFixed(2)} | noise ${config.noise.toFixed(2)} | speed ${config.speed.toFixed(2)}`;
+        }
+
+        function updateNavigation() {
+          const query = new URLSearchParams({
+            seed: state.seed,
+            phase: state.phase,
+          }).toString();
+          roomLink.href = `../index.html?${query}`;
+          memoryLink.href = `../forgotten.html?${query}`;
         }
 
         function applyState() {
@@ -349,6 +365,7 @@
           });
           renderCopy();
           renderManifest();
+          updateNavigation();
           syncUrl();
         }
 
@@ -409,3 +426,6 @@
     </script>
   </body>
 </html>
+
+
+

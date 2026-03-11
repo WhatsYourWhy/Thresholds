@@ -204,7 +204,8 @@
           <button id="reveal-button" data-testid="reveal-key" type="button">Reveal the key</button>
           <button id="copy-button" type="button">Copy address</button>
           <a id="open-link" href="forgotten.key" download>Download the raw key</a>
-          <a href="index.html">Return to the room</a>
+          <a id="observatory-link" href="Sigil/threshold.html">Open observatory</a>
+          <a id="return-link" href="index.html">Return to the room</a>
         </div>
       </section>
 
@@ -225,12 +226,15 @@
           window.matchMedia &&
           window.matchMedia("(prefers-reduced-motion: reduce)").matches;
         const seed = Engine.sanitizeSeed(search.get("seed")) || Engine.generateSeed();
+        const phase = Engine.parsePhase(search.get("phase"));
 
         const canvas = document.getElementById("memory-canvas");
         const decodedOutput = document.getElementById("decoded-output");
         const revealButton = document.getElementById("reveal-button");
         const copyButton = document.getElementById("copy-button");
         const openLink = document.getElementById("open-link");
+        const observatoryLink = document.getElementById("observatory-link");
+        const returnLink = document.getElementById("return-link");
         const memoryNote = document.getElementById("memory-note");
         const sigilNote = document.getElementById("sigil-note");
         const text = Engine.deriveText(seed, "cross");
@@ -241,12 +245,23 @@
           canvas,
           seed,
           phase: "listen",
-          reduceMotion,
+          reducedMotion: reduceMotion,
           overrides: {
             speed: reduceMotion ? 0.18 : 0.36,
             noise: reduceMotion ? 0.12 : 0.26,
           },
         });
+
+        function updateNavigation() {
+          const query = new URLSearchParams({
+            seed,
+            phase,
+          }).toString();
+          observatoryLink.href = `Sigil/threshold.html?${query}`;
+          observatoryLink.textContent = "Open observatory with this seed";
+          returnLink.href = `index.html?${query}`;
+          returnLink.textContent = `Return to the room :: ${phase}`;
+        }
 
         async function revealKey() {
           try {
@@ -256,7 +271,7 @@
             decodedOutput.textContent = decoded || "The key would not translate.";
             openLink.href = decoded || "forgotten.key";
             openLink.removeAttribute("download");
-            memoryNote.textContent = "The old address is now visible, and the raw key is still nearby if you want the artifact itself.";
+            memoryNote.textContent = "The old address is now visible. The raw key remains nearby, and your path back through the room stays seeded.";
           } catch (error) {
             decodedOutput.textContent = "The chamber could not reach the key.";
             memoryNote.textContent = "Fetch failed, but the raw key remains available as a file.";
@@ -282,8 +297,16 @@
         });
 
         document.addEventListener("pointerleave", () => renderer.clearPointer());
+
+        updateNavigation();
       });
     </script>
   </body>
 </html>
+
+
+
+
+
+
 

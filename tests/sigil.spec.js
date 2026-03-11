@@ -78,6 +78,9 @@ test.describe("threshold room", () => {
     await page.locator("#phase-button").click();
     await expect(page.locator("body")).toHaveAttribute("data-phase", "listen");
     await expect(title).not.toHaveText(firstTitle || "");
+    await expect(page.locator("#observatory-link")).toHaveAttribute("href", /seed=door-salt/);
+    await expect(page.locator("#observatory-link")).toHaveAttribute("href", /phase=listen/);
+    await expect(page.locator("#memory-link")).toHaveAttribute("href", /seed=door-salt/);
 
     const panel = page.locator("[data-testid='manifest-panel']");
     const before = await panel.getAttribute("data-open");
@@ -163,11 +166,12 @@ test.describe("threshold room", () => {
     await page.goto(url);
 
     const button = page.locator("[data-testid='reveal-key']");
+    await expect(page.locator("#return-link")).toHaveAttribute("href", /seed=amber-latch/);
     await button.focus();
     await page.keyboard.press("Enter");
 
     await expect(page.locator("[data-testid='memory-output']")).toContainText(
-      "https://cognisi.io",
+      "https://shankstrategy.com",
     );
   });
 
@@ -209,7 +213,9 @@ test.describe("mobile thresholds", () => {
 
     await page.locator("[data-testid='reveal-key']").tap();
     await expect(page.locator("[data-testid='memory-output']")).toContainText(
-      "https://cognisi.io",
+      "https://shankstrategy.com",
     );
   });
 });
+
+

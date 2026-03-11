@@ -547,8 +547,8 @@
             <button id="manifest-button" type="button">Toggle manifest</button>
           </div>
           <div class="artifact-dock" aria-label="Artifacts">
-            <a href="Sigil/threshold.html">Open the observatory</a>
-            <a href="forgotten.html">Enter the memory chamber</a>
+            <a id="observatory-link" href="Sigil/threshold.html">Open the observatory</a>
+            <a id="memory-link" href="forgotten.html">Enter the memory chamber</a>
             <a href="threshold.yaml">Read the raw manifest</a>
           </div>
         </div>
@@ -627,6 +627,8 @@
         const secretCopy = document.getElementById("secret-copy");
         const secretMeta = document.getElementById("secret-meta");
         const secretLink = document.getElementById("secret-link");
+        const observatoryLink = document.getElementById("observatory-link");
+        const memoryLink = document.getElementById("memory-link");
 
         body.dataset.motion = reduceMotion ? "reduced" : "full";
         motionValue.textContent = reduceMotion ? "reduced" : "full";
@@ -676,7 +678,11 @@
           seedValue.textContent = state.seed;
           glyphValue.textContent = text.glyph;
           manifestStatus.textContent = state.phase;
-          canvasPrompt.textContent = `Touch the field :: ${state.phase}`;
+          const nextPhase = Engine.nextPhase(state.phase);
+          phaseButton.textContent = `Advance to ${nextPhase}`;
+          reseedButton.textContent = "Reseed (R)";
+          manifestButton.textContent = state.manifestOpen ? "Hide manifest (M)" : "Show manifest (M)";
+          canvasPrompt.textContent = `Touch the field :: advance to ${nextPhase}`;
 
           driftGrid.innerHTML = text.drift
             .map(
@@ -702,11 +708,25 @@
           window.history.replaceState({}, "", target);
         }
 
+        function updateNavigation() {
+          const query = new URLSearchParams({
+            seed: state.seed,
+            phase: state.phase,
+          }).toString();
+          observatoryLink.href = `Sigil/threshold.html?${query}`;
+          memoryLink.href = `forgotten.html?${query}`;
+          if (!state.secretVisible || !state.memoryUrl) {
+            secretLink.href = `forgotten.html?${query}`;
+            secretLink.textContent = "Continue into the memory chamber";
+          }
+        }
+
         function applyState() {
           body.dataset.phase = state.phase;
           updateTheme();
           renderText();
           renderManifest();
+          updateNavigation();
           renderer.setState({
             seed: state.seed,
             phase: state.phase,
@@ -731,7 +751,8 @@
             source === "hold"
               ? "The room answered a held touch."
               : "The room offered this while you were still.";
-          secretLink.href = state.memoryUrl || "forgotten.html";
+          const fallbackMemory = `forgotten.html?seed=${state.seed}&phase=${state.phase}`;
+          secretLink.href = state.memoryUrl || fallbackMemory;
           secretLink.textContent = state.memoryUrl
             ? `Follow the old address :: ${state.memoryUrl}`
             : "Continue into the memory chamber";
@@ -842,3 +863,5 @@
     </script>
   </body>
 </html>
+
+
