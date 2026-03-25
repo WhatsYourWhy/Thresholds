@@ -297,33 +297,12 @@
       }
 
       .echo-shelf h2 {
-        margin: 0;
+        margin: 0 0 0.65rem;
         font-size: 0.72rem;
         letter-spacing: 0.14em;
         text-transform: uppercase;
         color: rgba(244, 236, 223, 0.68);
         font-family: "IBM Plex Mono", "Cascadia Code", "Fira Code", Consolas, monospace;
-      }
-
-      .echo-head {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        gap: 0.6rem;
-        margin-bottom: 0.65rem;
-      }
-
-      .echo-actions {
-        display: flex;
-        gap: 0.4rem;
-      }
-
-      .echo-action {
-        border-radius: 0.7rem;
-        padding: 0.35rem 0.6rem;
-        font-size: 0.66rem;
-        letter-spacing: 0.08em;
-        text-transform: uppercase;
       }
 
       .echo-list {
@@ -349,12 +328,6 @@
         opacity: 0.75;
         text-transform: uppercase;
         letter-spacing: 0.08em;
-      }
-
-      .echo-meta {
-        opacity: 0.65;
-        font-size: 0.68rem;
-        margin-left: 0.8rem;
       }
 
       .manifest-shell {
@@ -667,13 +640,7 @@
           </div>
           <div class="drift" id="drift-grid" aria-live="polite"></div>
           <section class="echo-shelf" aria-labelledby="echo-shelf-title">
-            <div class="echo-head">
-              <h2 id="echo-shelf-title">Echo Shelf</h2>
-              <div class="echo-actions">
-                <button id="copy-link-button" class="echo-action" type="button">Copy ritual link</button>
-                <button id="clear-echoes-button" class="echo-action" type="button">Clear</button>
-              </div>
-            </div>
+            <h2 id="echo-shelf-title">Echo Shelf</h2>
             <ul class="echo-list" id="echo-list"></ul>
           </section>
         </div>
@@ -750,8 +717,6 @@
         const observatoryLink = document.getElementById("observatory-link");
         const memoryLink = document.getElementById("memory-link");
         const echoList = document.getElementById("echo-list");
-        const clearEchoesButton = document.getElementById("clear-echoes-button");
-        const copyLinkButton = document.getElementById("copy-link-button");
 
         const ECHO_STORAGE_KEY = "threshold-room-echoes-v1";
 
@@ -831,13 +796,7 @@
             const parsed = JSON.parse(raw || "[]");
             if (!Array.isArray(parsed)) return [];
             return parsed
-              .filter(
-                (entry) =>
-                  entry &&
-                  typeof entry.seed === "string" &&
-                  typeof entry.phase === "string" &&
-                  typeof entry.capturedAt === "string",
-              )
+              .filter((entry) => entry && typeof entry.seed === "string" && typeof entry.phase === "string")
               .slice(0, 8);
           } catch (error) {
             return [];
@@ -856,27 +815,19 @@
           if (!state.echoes.length) {
             echoList.innerHTML =
               '<li><button type="button" disabled><span>No echoes yet</span><span class="echo-phase">capture one</span></button></li>';
-            clearEchoesButton.disabled = true;
             return;
           }
-          clearEchoesButton.disabled = false;
 
           echoList.innerHTML = state.echoes
             .map(
               (entry, index) =>
-                `<li><button type="button" data-echo-index="${index}"><span>${entry.seed}<span class="echo-meta">${formatCapturedAt(entry.capturedAt)}</span></span><span class="echo-phase">${entry.phase}</span></button></li>`,
+                `<li><button type="button" data-echo-index="${index}"><span>${entry.seed}</span><span class="echo-phase">${entry.phase}</span></button></li>`,
             )
             .join("");
         }
 
-        function formatCapturedAt(input) {
-          const capturedAt = new Date(input);
-          if (Number.isNaN(capturedAt.getTime())) return "just now";
-          return capturedAt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-        }
-
         function captureEcho() {
-          const next = [{ seed: state.seed, phase: state.phase, capturedAt: new Date().toISOString() }]
+          const next = [{ seed: state.seed, phase: state.phase }]
             .concat(state.echoes)
             .filter(
               (entry, index, list) =>
@@ -1072,33 +1023,6 @@
           focusShortcutLayer();
           resetIdleTimer();
         });
-        clearEchoesButton.addEventListener("click", () => {
-          state.echoes = [];
-          writeStoredEchoes();
-          renderEchoes();
-          hideSecret();
-          focusShortcutLayer();
-        });
-        copyLinkButton.addEventListener("click", async () => {
-          const link = new URL(window.location.href);
-          link.searchParams.set("seed", state.seed);
-          link.searchParams.set("phase", state.phase);
-          const shareable = link.toString();
-          try {
-            if (navigator.clipboard && navigator.clipboard.writeText) {
-              await navigator.clipboard.writeText(shareable);
-              copyLinkButton.textContent = "Copied";
-            } else {
-              copyLinkButton.textContent = "Copy manually";
-            }
-          } catch (error) {
-            copyLinkButton.textContent = "Copy manually";
-          }
-          window.setTimeout(() => {
-            copyLinkButton.textContent = "Copy ritual link";
-          }, 1500);
-          resetIdleTimer();
-        });
         manifestButton.addEventListener("click", () => {
           hideSecret();
           state.manifestOpen = !state.manifestOpen;
@@ -1183,6 +1107,7 @@
     </script>
   </body>
 </html>
+
 
 
 
