@@ -147,6 +147,7 @@ test.describe("threshold room", () => {
     const firstSnapshot = await page.evaluate(() => ({
       title: document.querySelector("[data-testid='room-title']")?.textContent,
       whisper: document.getElementById("room-whisper")?.textContent,
+      dreamline: document.getElementById("room-dreamline")?.textContent,
       drift: Array.from(document.querySelectorAll("#drift-grid span")).map((node) => node.textContent),
     }));
 
@@ -155,6 +156,7 @@ test.describe("threshold room", () => {
     const secondSnapshot = await page.evaluate(() => ({
       title: document.querySelector("[data-testid='room-title']")?.textContent,
       whisper: document.getElementById("room-whisper")?.textContent,
+      dreamline: document.getElementById("room-dreamline")?.textContent,
       drift: Array.from(document.querySelectorAll("#drift-grid span")).map((node) => node.textContent),
     }));
 

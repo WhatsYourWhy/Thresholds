@@ -181,6 +181,15 @@
         color: rgba(244, 236, 223, 0.7);
       }
 
+      .dreamline {
+        margin: 1rem 0 0;
+        font-size: 0.9rem;
+        line-height: 1.7;
+        color: rgba(244, 236, 223, 0.8);
+        max-width: 34rem;
+        font-style: italic;
+      }
+
       .seedline {
         margin: 1.5rem 0 0;
         display: flex;
@@ -612,6 +621,7 @@
           <h1 id="room-title" data-testid="room-title"></h1>
           <p class="whisper" id="room-whisper"></p>
           <p class="mantra" id="room-mantra"></p>
+          <p class="dreamline" id="room-dreamline"></p>
           <div class="seedline">
             <span>seed <strong id="seed-value" data-testid="seed-value"></strong></span>
             <span>motion <strong id="motion-value"></strong></span>
@@ -688,6 +698,7 @@
           manifestEntries: [],
           memoryUrl: "",
           echoes: [],
+          omenIndex: 0,
         };
 
         const body = document.body;
@@ -696,6 +707,7 @@
         const title = document.getElementById("room-title");
         const whisper = document.getElementById("room-whisper");
         const mantra = document.getElementById("room-mantra");
+        const dreamline = document.getElementById("room-dreamline");
         const driftGrid = document.getElementById("drift-grid");
         const phaseChip = document.getElementById("phase-chip");
         const seedValue = document.getElementById("seed-value");
@@ -767,6 +779,9 @@
           title.textContent = text.title;
           whisper.textContent = text.whisper;
           mantra.textContent = text.mantra;
+          if (dreamline && typeof Engine.deriveVerse === "function") {
+            dreamline.textContent = Engine.deriveVerse(state.seed, state.phase, state.omenIndex);
+          }
           phaseChip.textContent = state.phase;
           seedValue.textContent = state.seed;
           glyphValue.textContent = text.glyph;
@@ -903,6 +918,7 @@
         function cyclePhase() {
           hideSecret();
           state.phase = Engine.nextPhase(state.phase);
+          state.omenIndex = 0;
           applyState();
           resetIdleTimer();
         }
@@ -1014,6 +1030,7 @@
         reseedButton.addEventListener("click", () => {
           hideSecret();
           state.seed = Engine.generateSeed();
+          state.omenIndex = 0;
           applyState();
           resetIdleTimer();
           focusShortcutLayer();
@@ -1044,6 +1061,7 @@
           state.seed = state.echoes[index].seed;
           state.phase = Engine.parsePhase(state.echoes[index].phase);
           state.persistSeed = true;
+          state.omenIndex = 0;
           applyState();
           focusShortcutLayer();
           resetIdleTimer();
@@ -1082,6 +1100,13 @@
             resetIdleTimer();
             return;
           }
+          if (key === "v" || code === "KeyV") {
+            event.preventDefault();
+            state.omenIndex += 1;
+            renderText();
+            resetIdleTimer();
+            return;
+          }
           if (key === "escape" || code === "Escape") {
             event.preventDefault();
             hideSecret();
@@ -1107,7 +1132,6 @@
     </script>
   </body>
 </html>
-
 
 
 
