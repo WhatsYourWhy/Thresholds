@@ -118,6 +118,37 @@ test.describe("threshold room", () => {
     await expect(secret).not.toHaveClass(/is-visible/);
   });
 
+  test("echo shelf captures and recalls seeded moments", async ({ page }) => {
+    const url = `http://localhost:${listening.port}/index.html?seed=first-echo&phase=approach`;
+    await page.goto(url);
+
+    await page.locator("#capture-button").click();
+    await expect(page.locator("#echo-list button[data-echo-index='0']")).toContainText("first-echo");
+    await expect(page.locator("#echo-list button[data-echo-index='0']")).toContainText("approach");
+
+    await page.keyboard.press("KeyR");
+    const newSeed = await page.locator("#seed-value").textContent();
+    expect(newSeed).not.toEqual("first-echo");
+
+    await page.locator("#phase-button").click();
+    await expect(page.locator("body")).toHaveAttribute("data-phase", "listen");
+
+    await page.locator("#echo-list button[data-echo-index='0']").click();
+    await expect(page.locator("#seed-value")).toHaveText("first-echo");
+    await expect(page.locator("body")).toHaveAttribute("data-phase", "approach");
+  });
+
+  test("echo shelf can be cleared after captures", async ({ page }) => {
+    const url = `http://localhost:${listening.port}/index.html?seed=clear-echo&phase=listen`;
+    await page.goto(url);
+
+    await page.locator("#capture-button").click();
+    await expect(page.locator("#echo-list button[data-echo-index='0']")).toBeVisible();
+
+    await page.locator("#clear-echoes-button").click();
+    await expect(page.locator("#echo-list")).toContainText("No echoes yet");
+  });
+
   test("same seed and phase produce the same text fragments", async ({ page }) => {
     const url = `http://localhost:${listening.port}/index.html?seed=ashen-window&phase=cross`;
 
@@ -244,8 +275,6 @@ test.describe("mobile thresholds", () => {
     );
   });
 });
-
-
 
 
 
