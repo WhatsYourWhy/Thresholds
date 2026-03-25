@@ -812,18 +812,41 @@
         }
 
         function renderEchoes() {
+          echoList.textContent = "";
           if (!state.echoes.length) {
-            echoList.innerHTML =
-              '<li><button type="button" disabled><span>No echoes yet</span><span class="echo-phase">capture one</span></button></li>';
+            const emptyItem = document.createElement("li");
+            const emptyButton = document.createElement("button");
+            const emptySeed = document.createElement("span");
+            const emptyPhase = document.createElement("span");
+
+            emptyButton.type = "button";
+            emptyButton.disabled = true;
+            emptySeed.textContent = "No echoes yet";
+            emptyPhase.className = "echo-phase";
+            emptyPhase.textContent = "capture one";
+
+            emptyButton.append(emptySeed, emptyPhase);
+            emptyItem.appendChild(emptyButton);
+            echoList.appendChild(emptyItem);
             return;
           }
 
-          echoList.innerHTML = state.echoes
-            .map(
-              (entry, index) =>
-                `<li><button type="button" data-echo-index="${index}"><span>${entry.seed}</span><span class="echo-phase">${entry.phase}</span></button></li>`,
-            )
-            .join("");
+          state.echoes.forEach((entry, index) => {
+            const item = document.createElement("li");
+            const button = document.createElement("button");
+            const seed = document.createElement("span");
+            const phase = document.createElement("span");
+
+            button.type = "button";
+            button.dataset.echoIndex = String(index);
+            seed.textContent = entry.seed;
+            phase.className = "echo-phase";
+            phase.textContent = entry.phase;
+
+            button.append(seed, phase);
+            item.appendChild(button);
+            echoList.appendChild(item);
+          });
         }
 
         function captureEcho() {
@@ -1107,7 +1130,6 @@
     </script>
   </body>
 </html>
-
 
 
 
