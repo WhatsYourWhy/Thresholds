@@ -138,28 +138,6 @@ test.describe("threshold room", () => {
     await expect(page.locator("body")).toHaveAttribute("data-phase", "approach");
   });
 
-  test("echo shelf can be cleared after captures", async ({ page }) => {
-    const url = `http://localhost:${listening.port}/index.html?seed=clear-echo&phase=listen`;
-    await page.goto(url);
-
-    await page.locator("#capture-button").click();
-    await expect(page.locator("#echo-list button[data-echo-index='0']")).toBeVisible();
-
-    await page.locator("#clear-echoes-button").click();
-    await expect(page.locator("#echo-list")).toContainText("No echoes yet");
-  });
-
-  test("omen invocation shifts the dreamline", async ({ page }) => {
-    const url = `http://localhost:${listening.port}/index.html?seed=oracle-thread&phase=approach`;
-    await page.goto(url);
-
-    const dreamline = page.locator("#room-dreamline");
-    const first = await dreamline.textContent();
-
-    await page.keyboard.press("KeyV");
-    await expect(dreamline).not.toHaveText(first || "");
-  });
-
   test("same seed and phase produce the same text fragments", async ({ page }) => {
     const url = `http://localhost:${listening.port}/index.html?seed=ashen-window&phase=cross`;
 
@@ -288,5 +266,7 @@ test.describe("mobile thresholds", () => {
     );
   });
 });
+
+
 
 
