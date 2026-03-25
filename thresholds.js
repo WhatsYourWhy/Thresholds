@@ -180,6 +180,30 @@
     "threshold rain",
   ];
 
+  const VERSE_LIBRARY = {
+    openings: [
+      "Between glass and ember,",
+      "At the lip of the quiet room,",
+      "Under a patient signal,",
+      "Where the doorlight hesitates,",
+      "Inside the half-open loop,",
+    ],
+    middles: [
+      "your name becomes weather",
+      "the sigil leans toward memory",
+      "the field hums in borrowed gold",
+      "attention turns the lock silently",
+      "the corridor writes in soft static",
+    ],
+    endings: [
+      "and the threshold keeps listening.",
+      "until the walls answer back.",
+      "while the hidden key stays warm.",
+      "before the room remembers you first.",
+      "as if crossing were a form of prayer.",
+    ],
+  };
+
   function sanitizeSeed(input) {
     if (typeof input !== "string") return "";
     return input
@@ -342,6 +366,18 @@
       drift: takeSample(DRIFT_LIBRARY, 5, rng),
       glyph: takeSample(["<><", "/\\/", "[]~", "{::}", "o-o"], 1, rng)[0],
     };
+  }
+
+  function deriveVerse(seed, phase, variant) {
+    const cleanSeed = sanitizeSeed(seed) || "threshold";
+    const activePhase = parsePhase(phase);
+    const safeVariant = Number.isFinite(Number(variant)) ? Number(variant) : 0;
+    const rng = rngFrom(`${cleanSeed}:${activePhase}:verse:${safeVariant}`);
+    const opening = VERSE_LIBRARY.openings[Math.floor(rng() * VERSE_LIBRARY.openings.length)];
+    const middle = VERSE_LIBRARY.middles[Math.floor(rng() * VERSE_LIBRARY.middles.length)];
+    const ending = VERSE_LIBRARY.endings[Math.floor(rng() * VERSE_LIBRARY.endings.length)];
+
+    return `${opening} ${middle}, ${ending}`;
   }
 
   function deriveSigilConfig(options) {
@@ -698,6 +734,7 @@
     parseNumber,
     derivePalette,
     deriveText,
+    deriveVerse,
     deriveSigilConfig,
     parseManifest,
     decodeBase64,

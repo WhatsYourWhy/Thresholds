@@ -181,6 +181,15 @@
         color: rgba(244, 236, 223, 0.7);
       }
 
+      .dreamline {
+        margin: 1rem 0 0;
+        font-size: 0.9rem;
+        line-height: 1.7;
+        color: rgba(244, 236, 223, 0.8);
+        max-width: 34rem;
+        font-style: italic;
+      }
+
       .seedline {
         margin: 1.5rem 0 0;
         display: flex;
@@ -286,6 +295,75 @@
         color: rgba(244, 236, 223, 0.74);
         animation: driftUp 700ms ease both;
         animation-delay: calc(var(--index) * 80ms);
+      }
+
+      .echo-shelf {
+        margin-top: 1rem;
+        padding: 0.9rem;
+        border-radius: 1rem;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        background: rgba(255, 255, 255, 0.03);
+      }
+
+      .echo-shelf h2 {
+        margin: 0;
+        font-size: 0.72rem;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: rgba(244, 236, 223, 0.68);
+        font-family: "IBM Plex Mono", "Cascadia Code", "Fira Code", Consolas, monospace;
+      }
+
+      .echo-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 0.6rem;
+        margin-bottom: 0.65rem;
+      }
+
+      .echo-actions {
+        display: flex;
+        gap: 0.4rem;
+      }
+
+      .echo-action {
+        border-radius: 0.7rem;
+        padding: 0.35rem 0.6rem;
+        font-size: 0.66rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .echo-list {
+        margin: 0;
+        padding: 0;
+        list-style: none;
+        display: grid;
+        gap: 0.5rem;
+      }
+
+      .echo-list button {
+        width: 100%;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        text-align: left;
+        border-radius: 0.8rem;
+        padding: 0.65rem 0.8rem;
+        font-size: 0.76rem;
+      }
+
+      .echo-list button .echo-phase {
+        opacity: 0.75;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+      }
+
+      .echo-meta {
+        opacity: 0.65;
+        font-size: 0.68rem;
+        margin-left: 0.8rem;
       }
 
       .manifest-shell {
@@ -570,6 +648,7 @@
           <h1 id="room-title" data-testid="room-title"></h1>
           <p class="whisper" id="room-whisper"></p>
           <p class="mantra" id="room-mantra"></p>
+          <p class="dreamline" id="room-dreamline"></p>
           <div class="seedline">
             <span>seed <strong id="seed-value" data-testid="seed-value"></strong></span>
             <span>motion <strong id="motion-value"></strong></span>
@@ -578,6 +657,8 @@
           <div class="controls">
             <button id="phase-button" class="phase-button" type="button">Advance phase</button>
             <button id="reseed-button" type="button">Reseed the room</button>
+            <button id="capture-button" type="button">Capture echo</button>
+            <button id="verse-button" type="button">Invoke omen</button>
             <button id="manifest-button" type="button">Toggle manifest</button>
           </div>
           <div class="artifact-dock" aria-label="Artifacts">
@@ -596,6 +677,16 @@
             <button class="phase-prompt" id="canvas-prompt" type="button">Touch the field</button>
           </div>
           <div class="drift" id="drift-grid" aria-live="polite"></div>
+          <section class="echo-shelf" aria-labelledby="echo-shelf-title">
+            <div class="echo-head">
+              <h2 id="echo-shelf-title">Echo Shelf</h2>
+              <div class="echo-actions">
+                <button id="copy-link-button" class="echo-action" type="button">Copy ritual link</button>
+                <button id="clear-echoes-button" class="echo-action" type="button">Clear</button>
+              </div>
+            </div>
+            <ul class="echo-list" id="echo-list"></ul>
+          </section>
         </div>
       </section>
 
@@ -640,6 +731,8 @@
           secretVisible: false,
           manifestEntries: [],
           memoryUrl: "",
+          echoes: [],
+          omenIndex: 0,
         };
 
         const body = document.body;
@@ -648,6 +741,7 @@
         const title = document.getElementById("room-title");
         const whisper = document.getElementById("room-whisper");
         const mantra = document.getElementById("room-mantra");
+        const dreamline = document.getElementById("room-dreamline");
         const driftGrid = document.getElementById("drift-grid");
         const phaseChip = document.getElementById("phase-chip");
         const seedValue = document.getElementById("seed-value");
@@ -659,6 +753,8 @@
         const phaseButton = document.getElementById("phase-button");
         const reseedButton = document.getElementById("reseed-button");
         const manifestButton = document.getElementById("manifest-button");
+        const captureButton = document.getElementById("capture-button");
+        const verseButton = document.getElementById("verse-button");
         const canvasPrompt = document.getElementById("canvas-prompt");
         const secretPanel = document.getElementById("secret-panel");
         const secretCopy = document.getElementById("secret-copy");
@@ -667,6 +763,11 @@
         const secretClose = document.getElementById("secret-close");
         const observatoryLink = document.getElementById("observatory-link");
         const memoryLink = document.getElementById("memory-link");
+        const echoList = document.getElementById("echo-list");
+        const clearEchoesButton = document.getElementById("clear-echoes-button");
+        const copyLinkButton = document.getElementById("copy-link-button");
+
+        const ECHO_STORAGE_KEY = "threshold-room-echoes-v1";
 
         body.dataset.motion = reduceMotion ? "reduced" : "full";
         motionValue.textContent = reduceMotion ? "reduced" : "full";
@@ -715,6 +816,7 @@
           title.textContent = text.title;
           whisper.textContent = text.whisper;
           mantra.textContent = text.mantra;
+          dreamline.textContent = Engine.deriveVerse(state.seed, state.phase, state.omenIndex);
           phaseChip.textContent = state.phase;
           seedValue.textContent = state.seed;
           glyphValue.textContent = text.glyph;
@@ -722,6 +824,8 @@
           const nextPhase = Engine.nextPhase(state.phase);
           phaseButton.textContent = `Advance to ${nextPhase}`;
           reseedButton.textContent = "Reseed (R)";
+          captureButton.textContent = "Capture echo (C)";
+          verseButton.textContent = "Invoke omen (V)";
           manifestButton.textContent = state.manifestOpen ? "Hide manifest (M)" : "Show manifest (M)";
           canvasPrompt.textContent = `Touch the field :: advance to ${nextPhase}`;
 
@@ -735,6 +839,70 @@
           if (state.secretVisible) {
             secretCopy.textContent = text.secret;
           }
+        }
+
+        function readStoredEchoes() {
+          try {
+            const raw = window.localStorage.getItem(ECHO_STORAGE_KEY);
+            const parsed = JSON.parse(raw || "[]");
+            if (!Array.isArray(parsed)) return [];
+            return parsed
+              .filter(
+                (entry) =>
+                  entry &&
+                  typeof entry.seed === "string" &&
+                  typeof entry.phase === "string" &&
+                  typeof entry.capturedAt === "string",
+              )
+              .slice(0, 8);
+          } catch (error) {
+            return [];
+          }
+        }
+
+        function writeStoredEchoes() {
+          try {
+            window.localStorage.setItem(ECHO_STORAGE_KEY, JSON.stringify(state.echoes.slice(0, 8)));
+          } catch (error) {
+            // storage is optional for this room
+          }
+        }
+
+        function renderEchoes() {
+          if (!state.echoes.length) {
+            echoList.innerHTML =
+              '<li><button type="button" disabled><span>No echoes yet</span><span class="echo-phase">capture one</span></button></li>';
+            clearEchoesButton.disabled = true;
+            return;
+          }
+          clearEchoesButton.disabled = false;
+
+          echoList.innerHTML = state.echoes
+            .map(
+              (entry, index) =>
+                `<li><button type="button" data-echo-index="${index}"><span>${entry.seed}<span class="echo-meta">${formatCapturedAt(entry.capturedAt)}</span></span><span class="echo-phase">${entry.phase}</span></button></li>`,
+            )
+            .join("");
+        }
+
+        function formatCapturedAt(input) {
+          const capturedAt = new Date(input);
+          if (Number.isNaN(capturedAt.getTime())) return "just now";
+          return capturedAt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+        }
+
+        function captureEcho() {
+          const next = [{ seed: state.seed, phase: state.phase, capturedAt: new Date().toISOString() }]
+            .concat(state.echoes)
+            .filter(
+              (entry, index, list) =>
+                list.findIndex((candidate) => candidate.seed === entry.seed && candidate.phase === entry.phase) ===
+                index,
+            )
+            .slice(0, 8);
+          state.echoes = next;
+          writeStoredEchoes();
+          renderEchoes();
         }
 
         function syncUrl() {
@@ -800,6 +968,7 @@
         function cyclePhase() {
           hideSecret();
           state.phase = Engine.nextPhase(state.phase);
+          state.omenIndex = 0;
           applyState();
           resetIdleTimer();
         }
@@ -911,9 +1080,48 @@
         reseedButton.addEventListener("click", () => {
           hideSecret();
           state.seed = Engine.generateSeed();
+          state.omenIndex = 0;
           applyState();
           resetIdleTimer();
           focusShortcutLayer();
+        });
+        captureButton.addEventListener("click", () => {
+          captureEcho();
+          focusShortcutLayer();
+          resetIdleTimer();
+        });
+        verseButton.addEventListener("click", () => {
+          state.omenIndex += 1;
+          renderText();
+          focusShortcutLayer();
+          resetIdleTimer();
+        });
+        clearEchoesButton.addEventListener("click", () => {
+          state.echoes = [];
+          writeStoredEchoes();
+          renderEchoes();
+          hideSecret();
+          focusShortcutLayer();
+        });
+        copyLinkButton.addEventListener("click", async () => {
+          const link = new URL(window.location.href);
+          link.searchParams.set("seed", state.seed);
+          link.searchParams.set("phase", state.phase);
+          const shareable = link.toString();
+          try {
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+              await navigator.clipboard.writeText(shareable);
+              copyLinkButton.textContent = "Copied";
+            } else {
+              copyLinkButton.textContent = "Copy manually";
+            }
+          } catch (error) {
+            copyLinkButton.textContent = "Copy manually";
+          }
+          window.setTimeout(() => {
+            copyLinkButton.textContent = "Copy ritual link";
+          }, 1500);
+          resetIdleTimer();
         });
         manifestButton.addEventListener("click", () => {
           hideSecret();
@@ -926,6 +1134,20 @@
         secretClose.addEventListener("click", () => {
           hideSecret();
           focusShortcutLayer();
+        });
+        echoList.addEventListener("click", (event) => {
+          const button = event.target.closest("button[data-echo-index]");
+          if (!button) return;
+          const index = Number(button.dataset.echoIndex);
+          if (!Number.isInteger(index) || !state.echoes[index]) return;
+          hideSecret();
+          state.seed = state.echoes[index].seed;
+          state.phase = Engine.parsePhase(state.echoes[index].phase);
+          state.omenIndex = 0;
+          state.persistSeed = true;
+          applyState();
+          focusShortcutLayer();
+          resetIdleTimer();
         });
 
         function handleShortcut(event) {
@@ -955,6 +1177,19 @@
             resetIdleTimer();
             return;
           }
+          if (key === "c" || code === "KeyC") {
+            event.preventDefault();
+            captureEcho();
+            resetIdleTimer();
+            return;
+          }
+          if (key === "v" || code === "KeyV") {
+            event.preventDefault();
+            state.omenIndex += 1;
+            renderText();
+            resetIdleTimer();
+            return;
+          }
           if (key === "escape" || code === "Escape") {
             event.preventDefault();
             hideSecret();
@@ -971,6 +1206,8 @@
         });
 
         applyState();
+        state.echoes = readStoredEchoes();
+        renderEchoes();
         loadArtifacts();
         resetIdleTimer();
         focusShortcutLayer();
@@ -978,10 +1215,6 @@
     </script>
   </body>
 </html>
-
-
-
-
 
 
 
