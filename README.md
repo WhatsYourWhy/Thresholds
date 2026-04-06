@@ -3,7 +3,7 @@
 > “Some repos are doors.  
 > Some doors are closed for a reason.”
 
-![A fluctuating geometric sigil inside of a glowing digital window](preview.webp)
+![A fluctuating geometric sigil inside of a glowing digital window](preview_animation.webp)
 
 This repository was abandoned mid-incantation. It is not an application. It is a quiet room, preserved exactly as it was when the field last collapsed. 
 
