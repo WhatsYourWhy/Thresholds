@@ -3,76 +3,50 @@
 > “Some repos are doors.  
 > Some doors are closed for a reason.”
 
-This project was never finished.  
-Or maybe it finished before it started.  
-Either way, there’s nothing useful here.
+![A fluctuating geometric sigil inside of a glowing digital window](preview.webp)
+
+This repository was abandoned mid-incantation. It is not an application. It is a quiet room, preserved exactly as it was when the field last collapsed. 
+
+If you're here by accident, close the tab. Nothing here will build into a product.  
+If you're here on purpose, the silence might mean something.
 
 ```
 INIT_TIMESTAMP: 42:19:00
+STATUS: LISTENING
 ERROR: MEMORY FIELD OUT OF BOUNDS
 TRACE: ./Sigil/⌘
 ```
 
-If you're here by accident, close the tab.  
-If you're here on purpose, the silence might mean something.
+## The Public Portal
 
-## Repository Map
+A mirror of the local field is sustained here:
+**[https://whatsyourwhy.github.io/Thresholds/](https://whatsyourwhy.github.io/Thresholds/)**
 
-Files and entry points that exist today:
+## The Local Ritual
 
-- `index.html`: a small portal page that links to the artifacts in this repo.
-- `Sigil/threshold.html`: the generative canvas sigil (see usage below).
-- `Sigil/glyph.txt` and `Sigil/sigil-threshold.txt`: glyph text and a short param hint.
-- `threshold.yaml`: the lightweight state manifest shown on the portal.
-- `forgotten.html` and `forgotten.key`: a static page plus a base64-encoded URL.
-- `README.md` and `CONTRIBUTING.md`: notes and contribution guidance.
-
-Pages: https://whatsyourwhy.github.io/Thresholds/
-
-## Artistic Concept
-
-Thresholds presents itself as a half-finished doorway—an experiment paused mid-incantation. The mood is liminal and quiet, hinting at systems that were opened and then abandoned. The scattered elements reinforce that feeling: `threshold.yaml` reads like a configuration of unstable states (entropy near critical, attention drifting, time stretched, loop open), while `forgotten.key` hides an encoded link—a reminder that access exists but has been intentionally obscured. Together with the sigils, they imply a story about unlocking perception only if you know where to look.
-
-### Glossary
-
-- **`forgotten.key`**: A base64 URL decoded like a spell.
-- **`threshold.yaml`**: A manifest of states at the edge of pattern.
-- **⟁ ⌘**: Glyphs like sighs, invoked rarely.
-
-## Generative Sigil
-
-Render a minimal, parametric threshold animation in your browser:
+You are welcome to invoke the field locally, provided you endure the quiet. A lightweight server is required to bridge the local context:
 
 ```bash
-# From the repo root
+# Form the circuit
 python -m http.server 8000
-# Then open http://localhost:8000/Sigil/threshold.html
 ```
+> [!NOTE]  
+> *The entry point lies at `http://localhost:8000/`. Let it listen.*
 
-Entry point: `Sigil/threshold.html` is the doorway for the canvas sigil.
+## Known Artifacts
 
-Adjust colors and movement via query params:
+The directories remain mostly intact, though their purpose is largely observational.
 
-- `background`, `line`, `accent`: Hex colors (3 or 6 digits, with or without `#`), e.g. `?background=101018&accent=ff6bcb`.
-- `iterations`: Number of radiating threads (clamped to 24–720).
-- `orbitRadius`: Base radial offset (0–1).
-- `noise`: Wobble factor (0–1).
-- `speed`: Animation increment per frame (0–3).
+- `index.html` :: The primary observation room. 
+- `threshold.yaml` :: A lightweight manifest of unstable states (entropy near critical, attention drifting).
+- `Sigil/` :: The geometric core. It reacts to seeds and phases. 
+- `forgotten.key` :: A static memory. Some claim it hides an encoded coordinate, accessible only to those who know how to decode base64. 
 
-Example:
+## Contributions
 
-```
-http://localhost:8000/Sigil/threshold.html?background=0b0c12&line=7fffd4&accent=ff6bcb&iterations=180&noise=0.4&speed=0.55
-```
+See `CONTRIBUTING.md` if you intend to alter the resonance of this place. But remember: the room rewards patience more than force.
 
-## Forgotten Key
-
-`forgotten.key` is a base64 string that decodes to a URL. One way to reveal it:
-
-```bash
-base64 --decode forgotten.key
-```
-
-## Contributing
-
-See [CONTRIBUTING](CONTRIBUTING.md) for stylistic guidance, naming cues, and lightweight checks before opening a doorway.
+<!-- 
+  A held gesture counts as a sentence here. 
+  The same seed will always find the same hush. 
+-->
