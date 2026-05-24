@@ -112,6 +112,8 @@ function renderText() {
   captureButton.textContent = "Capture echo (C)";
   verseButton.textContent = "Invoke omen (V)";
   manifestButton.textContent = state.manifestOpen ? "Hide manifest (M)" : "Show manifest (M)";
+  const audioLabel = audio && audio.isActive() ? "Resonate (A — on)" : "Resonate (A — off)";
+  audioButton.textContent = audioLabel;
   canvasPrompt.textContent = `Touch the field :: advance to ${nextPhase}`;
 
   driftGrid.innerHTML = text.drift
@@ -120,6 +122,13 @@ function renderText() {
         `<span style="--index:${index}" aria-hidden="true">${entry}</span>`,
     )
     .join("");
+
+  // Re-trigger stagger animation on every render by forcing reflow
+  driftGrid.querySelectorAll("span").forEach((span) => {
+    span.style.animation = "none";
+    void span.offsetWidth; // reflow
+    span.style.animation = "";
+  });
 
   if (state.secretVisible) {
     secretCopy.textContent = text.secret;
@@ -437,12 +446,11 @@ audioButton.addEventListener("click", () => {
   const isCurrentlyActive = audio.isActive();
   audio.toggle(!isCurrentlyActive);
   if (!isCurrentlyActive) {
-    audioButton.textContent = "Resonate (Audio on)";
+    audioButton.textContent = "Resonate (A — on)";
     audioButton.classList.add("is-resonating");
-    audio.setSeed(state.seed);
     audio.setPointer(0.5, 0.5, state.phase);
   } else {
-    audioButton.textContent = "Resonate (Audio off)";
+    audioButton.textContent = "Resonate (A — off)";
     audioButton.classList.remove("is-resonating");
   }
   focusShortcutLayer();
@@ -504,6 +512,21 @@ function handleShortcut(event) {
     event.preventDefault();
     state.omenIndex += 1;
     renderText();
+    resetIdleTimer();
+    return;
+  }
+  if (key === "a" || code === "KeyA") {
+    event.preventDefault();
+    const isCurrentlyActive = audio.isActive();
+    audio.toggle(!isCurrentlyActive);
+    if (!isCurrentlyActive) {
+      audioButton.textContent = "Resonate (Audio on)";
+      audioButton.classList.add("is-resonating");
+      audio.setPointer(0.5, 0.5, state.phase);
+    } else {
+      audioButton.textContent = "Resonate (Audio off)";
+      audioButton.classList.remove("is-resonating");
+    }
     resetIdleTimer();
     return;
   }

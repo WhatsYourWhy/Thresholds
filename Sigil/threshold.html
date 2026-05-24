@@ -760,12 +760,12 @@
           const isCurrentlyActive = audio.isActive();
           audio.toggle(!isCurrentlyActive);
           if (!isCurrentlyActive) {
-            audioButton.textContent = "Resonate (Audio on)";
+            audioButton.textContent = "Resonate (A — on)";
             audioButton.classList.add("is-resonating");
             audio.setSeed(state.seed);
             audio.setPointer(0.5, 0.5, state.phase);
           } else {
-            audioButton.textContent = "Resonate (Audio off)";
+            audioButton.textContent = "Resonate (A — off)";
             audioButton.classList.remove("is-resonating");
           }
         });
@@ -777,6 +777,20 @@
             event.preventDefault();
             state.seed = Engine.generateSeed();
             applyState();
+          }
+          if (key === "a") {
+            event.preventDefault();
+            const isCurrentlyActive = audio.isActive();
+            audio.toggle(!isCurrentlyActive);
+            if (!isCurrentlyActive) {
+              audioButton.textContent = "Resonate (A — on)";
+              audioButton.classList.add("is-resonating");
+              audio.setSeed(state.seed);
+              audio.setPointer(0.5, 0.5, state.phase);
+            } else {
+              audioButton.textContent = "Resonate (A — off)";
+              audioButton.classList.remove("is-resonating");
+            }
           }
           if (key === "p") {
             event.preventDefault();
