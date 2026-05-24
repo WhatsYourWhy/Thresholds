@@ -61,6 +61,7 @@ const renderer = Engine.createSigilRenderer({
   seed: state.seed,
   phase: state.phase,
   reducedMotion: reduceMotion,
+  audioSource: audio,
 });
 
 let idleTimer = 0;
@@ -227,8 +228,11 @@ function applyState() {
   });
   manifestPanel.dataset.open = String(state.manifestOpen);
   syncUrl();
-  if (audio && audio.isActive()) {
+  // Always pre-warm audio pitch so it's ready when the user enables resonance
+  if (audio) {
     audio.setSeed(state.seed);
+  }
+  if (audio && audio.isActive()) {
     audio.setPointer(0.5, 0.5, state.phase);
   }
 }
@@ -255,9 +259,11 @@ function scheduleSecretHide() {
 
 function cyclePhase() {
   hideSecret();
+  document.body.classList.add("is-crossing");
   state.phase = Engine.nextPhase(state.phase);
   state.omenIndex = 0;
   applyState();
+  window.setTimeout(() => document.body.classList.remove("is-crossing"), 520);
   resetIdleTimer();
 }
 

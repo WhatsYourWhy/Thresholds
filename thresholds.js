@@ -457,6 +457,7 @@
   function createSigilRenderer(options) {
     const safeOptions = options || {};
     const canvas = safeOptions.canvas;
+    const audioSource = safeOptions.audioSource || null;
     const context =
       canvas && typeof canvas.getContext === "function"
         ? canvas.getContext("2d")
@@ -580,7 +581,19 @@
       const width = canvas.width / dpr;
       const height = canvas.height / dpr;
       const config = spec.config;
-      const pulse = timestamp * 0.001 * Math.max(0.12, config.speed);
+
+      // Audio-visual coupling: read live synth metrics and breathe them into the frame
+      let audioSpeedMod = 1.0;
+      let audioNoiseMod = 1.0;
+      if (audioSource && typeof audioSource.getMetrics === "function") {
+        const metrics = audioSource.getMetrics();
+        // LFO phase oscillates -1..1 at ~0.18Hz; map to a gentle speed breath ±6%
+        audioSpeedMod = 1.0 + metrics.lfoPhase * 0.06;
+        // Filter envelope (0..1) maps to a gentle noise swell ±4%
+        audioNoiseMod = 1.0 + (metrics.filterEnvelope - 0.5) * 0.08;
+      }
+
+      const pulse = timestamp * 0.001 * Math.max(0.12, config.speed * audioSpeedMod);
       const scale = Math.min(width, height) * (state.reducedMotion ? 0.31 : 0.36);
       const pointerAttract = pointer.active ? 0.12 : 0.05;
 
@@ -601,7 +614,7 @@
         const dot = spec.dots[index];
         const wobble =
           Math.sin(pulse * 1.4 + dot.drift) *
-          config.noise *
+          (config.noise * audioNoiseMod) *
           (state.reducedMotion ? 0.08 : 0.18);
         const angle =
           dot.theta +
@@ -733,6 +746,9 @@
     let lfo = null;
     let lfoGain = null;
     let active = false;
+    let lfoPhaseOffset = 0;
+    let filterEnvelopeValue = 0.5;
+    let pendingSeed = null;
 
     function init() {
       if (ctx) return;
@@ -746,10 +762,10 @@
       gainNode = ctx.createGain();
 
       osc1.type = "sawtooth";
-      osc1.frequency.value = 55.0; // E.g. A1 note
+      osc1.frequency.value = 55.0;
 
       osc2.type = "triangle";
-      osc2.frequency.value = 55.3; // Detuned chorus layer
+      osc2.frequency.value = 55.3;
 
       filter.type = "lowpass";
       filter.frequency.value = 220;
@@ -757,8 +773,8 @@
 
       lfo = ctx.createOscillator();
       lfoGain = ctx.createGain();
-      lfo.frequency.value = 0.18; // Slow modulation (0.18Hz)
-      lfoGain.gain.value = 45; // Modulates filter by +/- 45Hz
+      lfo.frequency.value = 0.18;
+      lfoGain.gain.value = 45;
 
       lfo.connect(lfoGain);
       lfoGain.connect(filter.frequency);
@@ -773,6 +789,12 @@
       osc1.start();
       osc2.start();
       lfo.start();
+
+      // Apply any seed that arrived before init
+      if (pendingSeed !== null) {
+        applySeedToNodes(pendingSeed);
+        pendingSeed = null;
+      }
     }
 
     function enable() {
@@ -796,16 +818,15 @@
     function setPointer(x, y, phase) {
       if (!active || !filter || !osc2 || !ctx) return;
 
-      // Map Y to filter frequency (cutoff from 120Hz to 680Hz)
       const targetCutoff = 120 + (1 - y) * 560;
       filter.frequency.setTargetAtTime(targetCutoff, ctx.currentTime, 0.2);
+      // Track normalised filter envelope for renderer coupling
+      filterEnvelopeValue = (targetCutoff - 120) / 560;
 
-      // Map X to detuning of osc2 relative to osc1
       const baseFreq = osc1.frequency.value;
-      const detuneAmount = (x - 0.5) * (baseFreq * 0.08); // detunes by up to 8%
+      const detuneAmount = (x - 0.5) * (baseFreq * 0.08);
       osc2.frequency.setTargetAtTime(baseFreq + detuneAmount, ctx.currentTime, 0.3);
 
-      // Map phase to gain
       let volume = 0.08;
       if (phase === "approach") volume = 0.06;
       if (phase === "listen") volume = 0.09;
@@ -813,16 +834,35 @@
       gainNode.gain.setTargetAtTime(volume, ctx.currentTime, 0.4);
     }
 
-    function setSeed(seed) {
-      init(); // Make sure nodes exist
-      if (!osc1 || !osc2 || !ctx) return;
-
+    function applySeedToNodes(seed) {
       const hash = hashString(seed || "threshold");
-      const baseNotes = [41.20, 43.65, 49.00, 55.00, 65.41]; // E1, F1, G1, A1, C2
+      const baseNotes = [41.20, 43.65, 49.00, 55.00, 65.41];
       const rootNote = baseNotes[hash % baseNotes.length];
-
       osc1.frequency.setTargetAtTime(rootNote, ctx.currentTime, 0.8);
       osc2.frequency.setTargetAtTime(rootNote * 1.006, ctx.currentTime, 0.8);
+    }
+
+    function setSeed(seed) {
+      // Always pre-warm pitch regardless of active state
+      if (!ctx) {
+        // Store for when init() is called
+        pendingSeed = seed || "threshold";
+        return;
+      }
+      if (!osc1 || !osc2) return;
+      applySeedToNodes(seed);
+    }
+
+    // Returns live metrics for audio-visual coupling
+    function getMetrics() {
+      if (!ctx) return { lfoPhase: 0, filterEnvelope: 0.5, active: false };
+      // Approximate LFO phase from currentTime — 0.18Hz period = ~5.56s
+      const lfoPhase = Math.sin(ctx.currentTime * 2 * Math.PI * 0.18 + lfoPhaseOffset);
+      return {
+        lfoPhase,
+        filterEnvelope: filterEnvelopeValue,
+        active,
+      };
     }
 
     return {
@@ -832,9 +872,10 @@
       },
       setPointer,
       setSeed,
+      getMetrics,
       isActive: function () {
         return active;
-      }
+      },
     };
   }
 

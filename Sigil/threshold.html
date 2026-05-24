@@ -330,6 +330,40 @@
         backdrop-filter: blur(10px);
         line-height: 1.6;
         color: rgba(244, 236, 223, 0.82);
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.25rem 0.4rem;
+        align-items: center;
+        font-size: 0.78rem;
+      }
+
+      .legend-seed {
+        color: var(--accent);
+        font-weight: 600;
+      }
+
+      .legend-phase {
+        color: var(--line);
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+      }
+
+      .legend-sep {
+        color: rgba(244, 236, 223, 0.3);
+      }
+
+      .legend-val {
+        color: rgba(244, 236, 223, 0.72);
+      }
+
+      @keyframes phaseCross {
+        0% { opacity: 1; }
+        35% { opacity: 0.55; }
+        100% { opacity: 1; }
+      }
+
+      .is-crossing .frame {
+        animation: phaseCross 420ms ease both;
       }
 
       @media (max-width: 960px) {
@@ -481,6 +515,7 @@
           phase: state.phase,
           reducedMotion: reduceMotion,
           overrides: state.overrides,
+          audioSource: audio,
         });
 
         function updateTheme() {
@@ -512,9 +547,15 @@
           } else {
             next.searchParams.delete("seed");
           }
-          Object.entries(rawOverrides).forEach(([key, value]) => {
-            if (value) next.searchParams.set(key, value);
-            else next.searchParams.delete(key);
+          // Use live state.overrides (not the stale rawOverrides snapshot)
+          const overrideKeys = ["background", "line", "accent", "iterations", "orbitRadius", "noise", "speed"];
+          overrideKeys.forEach((key) => {
+            const val = state.overrides[key];
+            if (val !== null && val !== undefined) {
+              next.searchParams.set(key, String(val));
+            } else {
+              next.searchParams.delete(key);
+            }
           });
           window.history.replaceState({}, "", `${next.pathname}${next.search}${next.hash}`);
         }
@@ -525,10 +566,22 @@
           copy.textContent = text.whisper;
           const config = renderer.getState().config;
           const nextPhase = Engine.nextPhase(state.phase);
-          phaseButton.textContent = `Advance to ${nextPhase}`;
+          phaseButton.textContent = `Advance to ${nextPhase} (P)`;
           reseedButton.textContent = "Reseed (R)";
           manifestButton.textContent = state.manifestOpen ? "Hide manifest (M)" : "Show manifest (M)";
-          legend.textContent = `seed ${state.seed} | phase ${state.phase} | bg ${config.palette.background} | line ${config.palette.line} | accent ${config.palette.accent} | iterations ${config.iterations} | orbit ${config.orbitRadius.toFixed(2)} | noise ${config.noise.toFixed(2)} | speed ${config.speed.toFixed(2)}`;
+          legend.innerHTML = [
+            `<span class="legend-seed">${state.seed}</span>`,
+            `<span class="legend-sep">::</span>`,
+            `<span class="legend-phase">${state.phase}</span>`,
+            `<span class="legend-sep">/</span>`,
+            `<span class="legend-val">${config.iterations} pts</span>`,
+            `<span class="legend-sep">/</span>`,
+            `<span class="legend-val">orbit ${config.orbitRadius.toFixed(2)}</span>`,
+            `<span class="legend-sep">/</span>`,
+            `<span class="legend-val">noise ${config.noise.toFixed(2)}</span>`,
+            `<span class="legend-sep">/</span>`,
+            `<span class="legend-val">speed ${config.speed.toFixed(2)}</span>`,
+          ].join(" ");
         }
 
         function updateNavigation() {
@@ -666,8 +719,10 @@
         }
 
         function cyclePhase() {
+          document.body.classList.add(\"is-crossing\");
           state.phase = Engine.nextPhase(state.phase);
           applyState();
+          window.setTimeout(() => document.body.classList.remove(\"is-crossing\"), 450);
         }
 
         phaseButton.addEventListener("click", cyclePhase);
@@ -678,6 +733,7 @@
         manifestButton.addEventListener("click", () => {
           state.manifestOpen = !state.manifestOpen;
           manifestList.hidden = !state.manifestOpen;
+          manifestButton.textContent = state.manifestOpen ? "Hide manifest (M)" : "Show manifest (M)";
         });
 
         canvas.addEventListener("click", cyclePhase);
@@ -715,13 +771,22 @@
         });
 
         window.addEventListener("keydown", (event) => {
-          if (event.key.toLowerCase() === "r") {
+          if (event.defaultPrevented || event.metaKey || event.ctrlKey || event.altKey) return;
+          const key = typeof event.key === "string" ? event.key.toLowerCase() : "";
+          if (key === "r") {
+            event.preventDefault();
             state.seed = Engine.generateSeed();
             applyState();
           }
-          if (event.key.toLowerCase() === "m") {
+          if (key === "p") {
+            event.preventDefault();
+            cyclePhase();
+          }
+          if (key === "m") {
+            event.preventDefault();
             state.manifestOpen = !state.manifestOpen;
             manifestList.hidden = !state.manifestOpen;
+            manifestButton.textContent = state.manifestOpen ? "Hide manifest (M)" : "Show manifest (M)";
           }
         });
 

@@ -554,6 +554,16 @@
         }
       }
 
+      @keyframes phaseCross {
+        0% { opacity: 1; filter: blur(0px); }
+        30% { opacity: 0.6; filter: blur(1.5px); }
+        100% { opacity: 1; filter: blur(0px); }
+      }
+
+      .is-crossing .sigil-shell canvas {
+        animation: phaseCross 500ms ease both;
+      }
+
       @media (max-width: 1080px) {
         .room {
           grid-template-columns: 1fr;

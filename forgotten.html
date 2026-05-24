@@ -178,6 +178,22 @@
         }
       }
 
+      @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(6px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+
+      body {
+        animation: fadeIn 480ms ease both;
+      }
+
+      body.fade-out {
+        opacity: 0;
+        transform: translateY(-4px);
+        transition: opacity 260ms ease, transform 260ms ease;
+        pointer-events: none;
+      }
+
       @media (prefers-reduced-motion: reduce) {
         *,
         *::before,
@@ -216,12 +232,8 @@
         </div>
       </section>
 
-      <aside class="aside">
-        <h2>Aside</h2>
-        <p>
-          The file is still the same plain-text base64 artifact. Only the ritual around it has changed.
-        </p>
-        <p class="sigil-note" id="sigil-note"></p>
+      <aside class="aside" aria-labelledby="aside-title">
+        <!-- populated by populateAside() from the engine -->
       </aside>
     </main>
 
@@ -244,11 +256,8 @@
         const observatoryLink = document.getElementById("observatory-link");
         const returnLink = document.getElementById("return-link");
         const memoryNote = document.getElementById("memory-note");
-        const sigilNote = document.getElementById("sigil-note");
         const text = Engine.deriveText(seed, "cross");
         const audio = Engine.createResonanceCircuit();
-
-        sigilNote.textContent = text.secret;
 
         const renderer = Engine.createSigilRenderer({
           canvas,
@@ -259,6 +268,7 @@
             speed: reduceMotion ? 0.18 : 0.36,
             noise: reduceMotion ? 0.12 : 0.26,
           },
+          audioSource: audio,
         });
 
         function updateNavigation() {
@@ -270,6 +280,20 @@
           observatoryLink.textContent = "Open observatory with this seed";
           returnLink.href = `index.html?${query}`;
           returnLink.textContent = `Return to the room :: ${phase}`;
+        }
+
+        function populateAside() {
+          const asideEl = document.querySelector(".aside");
+          if (!asideEl) return;
+          const verse = Engine.deriveVerse(seed, phase, 0);
+          const crossText = Engine.deriveText(seed, "cross");
+          asideEl.innerHTML = `
+            <h2 id="aside-title">What the room remembers</h2>
+            <p id="aside-verse" style="font-style:italic;margin-bottom:1.1rem;color:rgba(244,236,223,0.72)">${verse}</p>
+            <p class="sigil-note" id="sigil-note"></p>
+          `;
+          const sigilNoteEl = asideEl.querySelector("#sigil-note");
+          if (sigilNoteEl) sigilNoteEl.textContent = crossText.secret;
         }
 
         async function revealKey() {
@@ -295,6 +319,20 @@
             await navigator.clipboard.writeText(value);
             memoryNote.textContent = "The address has been copied.";
           }
+        });
+
+        // Fade out then navigate for outbound links
+        function fadeNavigate(href) {
+          document.body.classList.add("fade-out");
+          window.setTimeout(() => { window.location.href = href; }, 280);
+        }
+        observatoryLink.addEventListener("click", (e) => {
+          e.preventDefault();
+          fadeNavigate(observatoryLink.href);
+        });
+        returnLink.addEventListener("click", (e) => {
+          e.preventDefault();
+          fadeNavigate(returnLink.href);
         });
 
         document.addEventListener("pointermove", (event) => {
@@ -332,6 +370,7 @@
         });
 
         updateNavigation();
+        populateAside();
       });
     </script>
   </body>
