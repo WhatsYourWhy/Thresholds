@@ -1,4 +1,4 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -132,6 +132,12 @@
         border-color: rgba(255, 255, 255, 0.3);
       }
 
+      #audio-button.is-resonating {
+        border-color: var(--accent);
+        background: rgba(255, 208, 137, 0.08);
+        box-shadow: 0 0 12px rgba(255, 208, 137, 0.15);
+      }
+
       .memory-card {
         padding: 1rem;
         border-radius: 1.15rem;
@@ -203,6 +209,7 @@
         <div class="actions">
           <button id="reveal-button" data-testid="reveal-key" type="button">Reveal the key</button>
           <button id="copy-button" type="button">Copy address</button>
+          <button id="audio-button" type="button">Resonate (Audio off)</button>
           <a id="open-link" href="forgotten.key" download>Download the raw key</a>
           <a id="observatory-link" href="Sigil/threshold.html">Open observatory</a>
           <a id="return-link" href="index.html">Return to the room</a>
@@ -232,12 +239,14 @@
         const decodedOutput = document.getElementById("decoded-output");
         const revealButton = document.getElementById("reveal-button");
         const copyButton = document.getElementById("copy-button");
+        const audioButton = document.getElementById("audio-button");
         const openLink = document.getElementById("open-link");
         const observatoryLink = document.getElementById("observatory-link");
         const returnLink = document.getElementById("return-link");
         const memoryNote = document.getElementById("memory-note");
         const sigilNote = document.getElementById("sigil-note");
         const text = Engine.deriveText(seed, "cross");
+        const audio = Engine.createResonanceCircuit();
 
         sigilNote.textContent = text.secret;
 
@@ -289,14 +298,38 @@
         });
 
         document.addEventListener("pointermove", (event) => {
+          const px = event.clientX / window.innerWidth;
+          const py = event.clientY / window.innerHeight;
           renderer.setPointer({
-            x: event.clientX / window.innerWidth,
-            y: event.clientY / window.innerHeight,
+            x: px,
+            y: py,
             active: true,
           });
+          if (audio && audio.isActive()) {
+            audio.setPointer(px, py, "cross");
+          }
         });
 
-        document.addEventListener("pointerleave", () => renderer.clearPointer());
+        document.addEventListener("pointerleave", () => {
+          renderer.clearPointer();
+          if (audio && audio.isActive()) {
+            audio.setPointer(0.5, 0.5, "cross");
+          }
+        });
+
+        audioButton.addEventListener("click", () => {
+          const isCurrentlyActive = audio.isActive();
+          audio.toggle(!isCurrentlyActive);
+          if (!isCurrentlyActive) {
+            audioButton.textContent = "Resonate (Audio on)";
+            audioButton.classList.add("is-resonating");
+            audio.setSeed(seed);
+            audio.setPointer(0.5, 0.5, "cross");
+          } else {
+            audioButton.textContent = "Resonate (Audio off)";
+            audioButton.classList.remove("is-resonating");
+          }
+        });
 
         updateNavigation();
       });

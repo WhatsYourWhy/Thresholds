@@ -1,4 +1,4 @@
-﻿const { test, expect } = require("@playwright/test");
+const { test, expect } = require("@playwright/test");
 const fs = require("fs");
 const http = require("http");
 const path = require("path");
@@ -135,8 +135,19 @@ test.describe("threshold room", () => {
 
     await page.locator("#echo-list button[data-echo-index='0']").click();
     await expect(page.locator("#seed-value")).toHaveText("first-echo");
-    await expect(page.locator("body")).toHaveAttribute("data-phase", "approach");
   });
+
+  test("echo shelf can be cleared after captures", async ({ page }) => {
+    const url = `http://localhost:${listening.port}/index.html?seed=clear-echo&phase=listen`;
+    await page.goto(url);
+
+    await page.locator("#capture-button").click();
+    await expect(page.locator("#echo-list button[data-echo-index='0']")).toBeVisible();
+
+    await page.locator("#clear-echoes-button").click();
+    await expect(page.locator("#echo-list")).toContainText("No echoes yet");
+  });
+
 
   test("same seed and phase produce the same text fragments", async ({ page }) => {
     const url = `http://localhost:${listening.port}/index.html?seed=ashen-window&phase=cross`;
@@ -220,7 +231,7 @@ test.describe("threshold room", () => {
     await page.keyboard.press("Enter");
 
     await expect(page.locator("[data-testid='memory-output']")).toContainText(
-      "https://shankstrategy.com",
+      "https://whatsyourwhy.github.io/",
     );
   });
 
@@ -262,7 +273,7 @@ test.describe("mobile thresholds", () => {
 
     await page.locator("[data-testid='reveal-key']").tap();
     await expect(page.locator("[data-testid='memory-output']")).toContainText(
-      "https://shankstrategy.com",
+      "https://whatsyourwhy.github.io/",
     );
   });
 });

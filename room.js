@@ -48,6 +48,8 @@ const memoryLink = document.getElementById("memory-link");
 const echoList = document.getElementById("echo-list");
 const clearEchoesButton = document.getElementById("clear-echoes-button");
 const copyLinkButton = document.getElementById("copy-link-button");
+const audioButton = document.getElementById("audio-button");
+const audio = Engine.createResonanceCircuit();
 
 const ECHO_STORAGE_KEY = "threshold-room-echoes-v1";
 
@@ -225,6 +227,10 @@ function applyState() {
   });
   manifestPanel.dataset.open = String(state.manifestOpen);
   syncUrl();
+  if (audio && audio.isActive()) {
+    audio.setSeed(state.seed);
+    audio.setPointer(0.5, 0.5, state.phase);
+  }
 }
 
 function focusShortcutLayer() {
@@ -322,16 +328,24 @@ async function loadArtifacts() {
 
 room.addEventListener("pointermove", (event) => {
   const rect = canvas.getBoundingClientRect();
+  const px = (event.clientX - rect.left) / rect.width;
+  const py = (event.clientY - rect.top) / rect.height;
   renderer.setPointer({
-    x: (event.clientX - rect.left) / rect.width,
-    y: (event.clientY - rect.top) / rect.height,
+    x: px,
+    y: py,
     active: true,
   });
   resetIdleTimer();
+  if (audio && audio.isActive()) {
+    audio.setPointer(px, py, state.phase);
+  }
 });
 
 room.addEventListener("pointerleave", () => {
   renderer.clearPointer();
+  if (audio && audio.isActive()) {
+    audio.setPointer(0.5, 0.5, state.phase);
+  }
 });
 
 room.addEventListener("pointerdown", (event) => {
@@ -412,6 +426,21 @@ manifestButton.addEventListener("click", () => {
   renderText();
   resetIdleTimer();
   focusShortcutLayer();
+});
+audioButton.addEventListener("click", () => {
+  const isCurrentlyActive = audio.isActive();
+  audio.toggle(!isCurrentlyActive);
+  if (!isCurrentlyActive) {
+    audioButton.textContent = "Resonate (Audio on)";
+    audioButton.classList.add("is-resonating");
+    audio.setSeed(state.seed);
+    audio.setPointer(0.5, 0.5, state.phase);
+  } else {
+    audioButton.textContent = "Resonate (Audio off)";
+    audioButton.classList.remove("is-resonating");
+  }
+  focusShortcutLayer();
+  resetIdleTimer();
 });
 secretClose.addEventListener("click", () => {
   hideSecret();

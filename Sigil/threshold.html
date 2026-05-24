@@ -1,4 +1,4 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -118,6 +118,153 @@
         border-color: rgba(255, 255, 255, 0.3);
       }
 
+      .sliders-section {
+        display: grid;
+        gap: 1.1rem;
+        padding: 1.1rem;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        border-radius: 1.2rem;
+        backdrop-filter: blur(8px);
+        margin-top: 0.5rem;
+      }
+
+      .slider-group {
+        display: grid;
+        gap: 0.4rem;
+      }
+
+      .slider-group label {
+        font-family: "IBM Plex Mono", "Cascadia Code", "Fira Code", Consolas, monospace;
+        font-size: 0.76rem;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: rgba(244, 236, 223, 0.74);
+        display: flex;
+        justify-content: space-between;
+      }
+
+      .slider-group label span {
+        color: var(--accent);
+        font-weight: bold;
+      }
+
+      /* Premium styled range input */
+      .slider-group input[type="range"] {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 100%;
+        height: 6px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.12);
+        outline: none;
+        transition: background 200ms ease;
+      }
+
+      .slider-group input[type="range"]:hover {
+        background: rgba(255, 255, 255, 0.18);
+      }
+
+      /* Webkit / Chrome / Safari thumb */
+      .slider-group input[type="range"]::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        background: var(--line);
+        border: 2px solid var(--bg);
+        cursor: pointer;
+        box-shadow: 0 0 10px var(--line);
+        transition: transform 150ms ease, background 150ms ease;
+      }
+
+      .slider-group input[type="range"]::-webkit-slider-thumb:hover {
+        transform: scale(1.2);
+        background: var(--accent);
+        box-shadow: 0 0 14px var(--accent);
+      }
+
+      /* Firefox thumb */
+      .slider-group input[type="range"]::-moz-range-thumb {
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        background: var(--line);
+        border: 2px solid var(--bg);
+        cursor: pointer;
+        box-shadow: 0 0 10px var(--line);
+        transition: transform 150ms ease, background 150ms ease;
+      }
+
+      .slider-group input[type="range"]::-moz-range-thumb:hover {
+        transform: scale(1.2);
+        background: var(--accent);
+        box-shadow: 0 0 14px var(--accent);
+      }
+
+      #audio-button.is-resonating {
+        border-color: var(--accent);
+        background: rgba(255, 208, 137, 0.08);
+        box-shadow: 0 0 12px rgba(255, 208, 137, 0.15);
+      }
+
+      .color-group {
+        display: flex;
+        gap: 0.8rem;
+        justify-content: space-between;
+        margin-top: 0.5rem;
+        border-top: 1px solid rgba(255, 255, 255, 0.08);
+        padding-top: 0.8rem;
+      }
+
+      .color-picker-wrapper {
+        display: grid;
+        gap: 0.25rem;
+        justify-items: center;
+        flex: 1;
+      }
+
+      .color-picker-wrapper label {
+        font-family: "IBM Plex Mono", "Cascadia Code", "Fira Code", Consolas, monospace;
+        font-size: 0.65rem;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: rgba(244, 236, 223, 0.6);
+      }
+
+      .color-picker-wrapper input[type="color"] {
+        -webkit-appearance: none;
+        appearance: none;
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        border-radius: 50%;
+        width: 28px;
+        height: 28px;
+        cursor: pointer;
+        background: none;
+        padding: 0;
+        transition: transform 150ms ease, border-color 150ms ease;
+      }
+
+      .color-picker-wrapper input[type="color"]::-webkit-color-swatch-wrapper {
+        padding: 0;
+      }
+
+      .color-picker-wrapper input[type="color"]::-webkit-color-swatch {
+        border: none;
+        border-radius: 50%;
+      }
+
+      .color-picker-wrapper input[type="color"]::-moz-color-swatch {
+        border: none;
+        border-radius: 50%;
+      }
+
+      .color-picker-wrapper input[type="color"]:hover {
+        transform: scale(1.15);
+        border-color: rgba(255, 255, 255, 0.4);
+      }
+
       .manifest-list {
         margin: 0;
       }
@@ -223,8 +370,41 @@
           <button id="phase-button" type="button">Advance phase</button>
           <button id="reseed-button" type="button">Reseed</button>
           <button id="manifest-button" type="button">Toggle manifest</button>
+          <button id="audio-button" type="button">Resonate (Audio off)</button>
           <a id="room-link" href="../index.html">Return to the room</a>
           <a id="memory-link" href="../forgotten.html">Enter the memory chamber</a>
+        </div>
+        <div class="sliders-section">
+          <div class="slider-group">
+            <label for="slider-iterations">Iterations <span id="val-iterations">128</span></label>
+            <input type="range" id="slider-iterations" min="24" max="720" value="128" step="1">
+          </div>
+          <div class="slider-group">
+            <label for="slider-orbit">Orbit Radius <span id="val-orbit">0.50</span></label>
+            <input type="range" id="slider-orbit" min="0" max="1" value="0.5" step="0.01">
+          </div>
+          <div class="slider-group">
+            <label for="slider-noise">Noise <span id="val-noise">0.50</span></label>
+            <input type="range" id="slider-noise" min="0" max="1" value="0.5" step="0.01">
+          </div>
+          <div class="slider-group">
+            <label for="slider-speed">Speed <span id="val-speed">1.00</span></label>
+            <input type="range" id="slider-speed" min="0" max="3" value="1" step="0.05">
+          </div>
+          <div class="color-group">
+            <div class="color-picker-wrapper">
+              <label for="color-bg">Background</label>
+              <input type="color" id="color-bg" value="#0b1020">
+            </div>
+            <div class="color-picker-wrapper">
+              <label for="color-line">Line</label>
+              <input type="color" id="color-line" value="#95f2ff">
+            </div>
+            <div class="color-picker-wrapper">
+              <label for="color-accent">Accent</label>
+              <input type="color" id="color-accent" value="#ffd089">
+            </div>
+          </div>
         </div>
         <dl class="manifest-list" id="manifest-list"></dl>
       </aside>
@@ -287,8 +467,13 @@
         const phaseButton = document.getElementById("phase-button");
         const reseedButton = document.getElementById("reseed-button");
         const manifestButton = document.getElementById("manifest-button");
+        const audioButton = document.getElementById("audio-button");
+        const colorBg = document.getElementById("color-bg");
+        const colorLine = document.getElementById("color-line");
+        const colorAccent = document.getElementById("color-accent");
         const roomLink = document.getElementById("room-link");
         const memoryLink = document.getElementById("memory-link");
+        const audio = Engine.createResonanceCircuit();
 
         const renderer = Engine.createSigilRenderer({
           canvas,
@@ -367,6 +552,103 @@
           renderManifest();
           updateNavigation();
           syncUrl();
+          updateSliders();
+          if (audio && audio.isActive()) {
+            audio.setSeed(state.seed);
+            audio.setPointer(0.5, 0.5, state.phase);
+          }
+        }
+
+        function updateSliders() {
+          const config = renderer.getState().config;
+          const iterInput = document.getElementById("slider-iterations");
+          const orbitInput = document.getElementById("slider-orbit");
+          const noiseInput = document.getElementById("slider-noise");
+          const speedInput = document.getElementById("slider-speed");
+
+          const iterVal = document.getElementById("val-iterations");
+          const orbitVal = document.getElementById("val-orbit");
+          const noiseVal = document.getElementById("val-noise");
+          const speedVal = document.getElementById("val-speed");
+
+          if (iterInput) {
+            iterInput.value = config.iterations;
+            iterVal.textContent = config.iterations;
+          }
+          if (orbitInput) {
+            orbitInput.value = config.orbitRadius;
+            orbitVal.textContent = config.orbitRadius.toFixed(2);
+          }
+          if (noiseInput) {
+            noiseInput.value = config.noise;
+            noiseVal.textContent = config.noise.toFixed(2);
+          }
+          if (speedInput) {
+            speedInput.value = config.speed;
+            speedVal.textContent = config.speed.toFixed(2);
+          }
+          if (colorBg) colorBg.value = config.palette.background;
+          if (colorLine) colorLine.value = config.palette.line;
+          if (colorAccent) colorAccent.value = config.palette.accent;
+        }
+
+        function setupSliderListeners() {
+          const iterInput = document.getElementById("slider-iterations");
+          const orbitInput = document.getElementById("slider-orbit");
+          const noiseInput = document.getElementById("slider-noise");
+          const speedInput = document.getElementById("slider-speed");
+
+          const updateOverride = (key, val) => {
+            state.overrides[key] = val;
+            rawOverrides[key] = String(val);
+            
+            renderer.setState({
+              seed: state.seed,
+              phase: state.phase,
+              reducedMotion: reduceMotion,
+              overrides: state.overrides,
+            });
+            renderCopy();
+            renderManifest();
+            updateNavigation();
+            syncUrl();
+
+            const displayId = {
+              iterations: "val-iterations",
+              orbitRadius: "val-orbit",
+              noise: "val-noise",
+              speed: "val-speed"
+            }[key];
+            const displayEl = document.getElementById(displayId);
+            if (displayEl) {
+              displayEl.textContent = typeof val === "number" && key !== "iterations" ? val.toFixed(2) : val;
+            }
+          };
+
+          iterInput.addEventListener("input", (e) => {
+            updateOverride("iterations", parseInt(e.target.value, 10));
+          });
+          orbitInput.addEventListener("input", (e) => {
+            updateOverride("orbitRadius", parseFloat(e.target.value));
+          });
+          noiseInput.addEventListener("input", (e) => {
+            updateOverride("noise", parseFloat(e.target.value));
+          });
+          speedInput.addEventListener("input", (e) => {
+            updateOverride("speed", parseFloat(e.target.value));
+          });
+          colorBg.addEventListener("input", (e) => {
+            updateOverride("background", e.target.value);
+            updateTheme();
+          });
+          colorLine.addEventListener("input", (e) => {
+            updateOverride("line", e.target.value);
+            updateTheme();
+          });
+          colorAccent.addEventListener("input", (e) => {
+            updateOverride("accent", e.target.value);
+            updateTheme();
+          });
         }
 
         async function loadManifest() {
@@ -401,13 +683,36 @@
         canvas.addEventListener("click", cyclePhase);
         canvas.addEventListener("pointermove", (event) => {
           const rect = canvas.getBoundingClientRect();
+          const px = (event.clientX - rect.left) / rect.width;
+          const py = (event.clientY - rect.top) / rect.height;
           renderer.setPointer({
-            x: (event.clientX - rect.left) / rect.width,
-            y: (event.clientY - rect.top) / rect.height,
+            x: px,
+            y: py,
             active: true,
           });
+          if (audio && audio.isActive()) {
+            audio.setPointer(px, py, state.phase);
+          }
         });
-        canvas.addEventListener("pointerleave", () => renderer.clearPointer());
+        canvas.addEventListener("pointerleave", () => {
+          renderer.clearPointer();
+          if (audio && audio.isActive()) {
+            audio.setPointer(0.5, 0.5, state.phase);
+          }
+        });
+        audioButton.addEventListener("click", () => {
+          const isCurrentlyActive = audio.isActive();
+          audio.toggle(!isCurrentlyActive);
+          if (!isCurrentlyActive) {
+            audioButton.textContent = "Resonate (Audio on)";
+            audioButton.classList.add("is-resonating");
+            audio.setSeed(state.seed);
+            audio.setPointer(0.5, 0.5, state.phase);
+          } else {
+            audioButton.textContent = "Resonate (Audio off)";
+            audioButton.classList.remove("is-resonating");
+          }
+        });
 
         window.addEventListener("keydown", (event) => {
           if (event.key.toLowerCase() === "r") {
@@ -420,6 +725,7 @@
           }
         });
 
+        setupSliderListeners();
         applyState();
         loadManifest();
       });

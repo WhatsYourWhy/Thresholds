@@ -1,4 +1,4 @@
-﻿(function (global) {
+(function (global) {
   const PHASES = ["approach", "listen", "cross"];
   const TAU = Math.PI * 2;
 
@@ -724,6 +724,120 @@
     };
   }
 
+  function createResonanceCircuit() {
+    let ctx = null;
+    let osc1 = null;
+    let osc2 = null;
+    let filter = null;
+    let gainNode = null;
+    let lfo = null;
+    let lfoGain = null;
+    let active = false;
+
+    function init() {
+      if (ctx) return;
+      const AudioContextClass = global.AudioContext || global.webkitAudioContext;
+      if (!AudioContextClass) return;
+
+      ctx = new AudioContextClass();
+      osc1 = ctx.createOscillator();
+      osc2 = ctx.createOscillator();
+      filter = ctx.createBiquadFilter();
+      gainNode = ctx.createGain();
+
+      osc1.type = "sawtooth";
+      osc1.frequency.value = 55.0; // E.g. A1 note
+
+      osc2.type = "triangle";
+      osc2.frequency.value = 55.3; // Detuned chorus layer
+
+      filter.type = "lowpass";
+      filter.frequency.value = 220;
+      filter.Q.value = 4.5;
+
+      lfo = ctx.createOscillator();
+      lfoGain = ctx.createGain();
+      lfo.frequency.value = 0.18; // Slow modulation (0.18Hz)
+      lfoGain.gain.value = 45; // Modulates filter by +/- 45Hz
+
+      lfo.connect(lfoGain);
+      lfoGain.connect(filter.frequency);
+
+      osc1.connect(filter);
+      osc2.connect(filter);
+      filter.connect(gainNode);
+      gainNode.connect(ctx.destination);
+
+      gainNode.gain.setValueAtTime(0, ctx.currentTime);
+
+      osc1.start();
+      osc2.start();
+      lfo.start();
+    }
+
+    function enable() {
+      init();
+      if (ctx && ctx.state === "suspended") {
+        ctx.resume();
+      }
+      if (gainNode) {
+        gainNode.gain.linearRampToValueAtTime(0.08, ctx.currentTime + 1.2);
+      }
+      active = true;
+    }
+
+    function disable() {
+      if (gainNode) {
+        gainNode.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.8);
+      }
+      active = false;
+    }
+
+    function setPointer(x, y, phase) {
+      if (!active || !filter || !osc2 || !ctx) return;
+
+      // Map Y to filter frequency (cutoff from 120Hz to 680Hz)
+      const targetCutoff = 120 + (1 - y) * 560;
+      filter.frequency.setTargetAtTime(targetCutoff, ctx.currentTime, 0.2);
+
+      // Map X to detuning of osc2 relative to osc1
+      const baseFreq = osc1.frequency.value;
+      const detuneAmount = (x - 0.5) * (baseFreq * 0.08); // detunes by up to 8%
+      osc2.frequency.setTargetAtTime(baseFreq + detuneAmount, ctx.currentTime, 0.3);
+
+      // Map phase to gain
+      let volume = 0.08;
+      if (phase === "approach") volume = 0.06;
+      if (phase === "listen") volume = 0.09;
+      if (phase === "cross") volume = 0.12;
+      gainNode.gain.setTargetAtTime(volume, ctx.currentTime, 0.4);
+    }
+
+    function setSeed(seed) {
+      init(); // Make sure nodes exist
+      if (!osc1 || !osc2 || !ctx) return;
+
+      const hash = hashString(seed || "threshold");
+      const baseNotes = [41.20, 43.65, 49.00, 55.00, 65.41]; // E1, F1, G1, A1, C2
+      const rootNote = baseNotes[hash % baseNotes.length];
+
+      osc1.frequency.setTargetAtTime(rootNote, ctx.currentTime, 0.8);
+      osc2.frequency.setTargetAtTime(rootNote * 1.006, ctx.currentTime, 0.8);
+    }
+
+    return {
+      toggle: function (shouldEnable) {
+        if (shouldEnable) enable();
+        else disable();
+      },
+      setPointer,
+      setSeed,
+      isActive: function () {
+        return active;
+      }
+    };
+  }
+
   global.ThresholdsEngine = {
     PHASES,
     sanitizeSeed,
@@ -739,5 +853,6 @@
     parseManifest,
     decodeBase64,
     createSigilRenderer,
+    createResonanceCircuit,
   };
 })(window);
