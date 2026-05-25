@@ -30,6 +30,37 @@
         overflow: hidden;
       }
 
+      body::before,
+      body::after {
+        content: "";
+        position: fixed;
+        inset: auto;
+        pointer-events: none;
+        z-index: 0;
+        transform: scale(var(--audio-bloom-glow, 1));
+        transition: transform 120ms linear;
+      }
+
+      body::before {
+        width: 32rem;
+        height: 32rem;
+        top: -8rem;
+        right: -6rem;
+        border-radius: 50%;
+        background: radial-gradient(circle, rgba(255, 208, 137, 0.08), transparent 70%);
+        filter: blur(12px);
+      }
+
+      body::after {
+        width: 24rem;
+        height: 24rem;
+        bottom: -6rem;
+        left: -5rem;
+        border-radius: 50%;
+        background: radial-gradient(circle, rgba(149, 242, 255, 0.08), transparent 72%);
+        filter: blur(10px);
+      }
+
       .grain {
         position: fixed;
         inset: 0;
@@ -240,6 +271,20 @@
     <script>
       window.addEventListener("DOMContentLoaded", () => {
         const Engine = window.ThresholdsEngine;
+
+        const VISITED_KEY = "threshold-visited-chambers-v1";
+        function recordVisit(chamber) {
+          try {
+            let visited = JSON.parse(localStorage.getItem(VISITED_KEY) || "[]");
+            if (!Array.isArray(visited)) visited = [];
+            if (!visited.includes(chamber)) {
+              visited.push(chamber);
+              localStorage.setItem(VISITED_KEY, JSON.stringify(visited));
+            }
+          } catch (e) {}
+        }
+        recordVisit("memory");
+
         const search = new URLSearchParams(window.location.search);
         const reduceMotion =
           window.matchMedia &&
@@ -256,7 +301,6 @@
         const observatoryLink = document.getElementById("observatory-link");
         const returnLink = document.getElementById("return-link");
         const memoryNote = document.getElementById("memory-note");
-        const text = Engine.deriveText(seed, "cross");
         const audio = Engine.createResonanceCircuit();
 
         const renderer = Engine.createSigilRenderer({
@@ -296,6 +340,17 @@
           if (sigilNoteEl) sigilNoteEl.textContent = crossText.secret;
         }
 
+        function syncAudioUI() {
+          if (!audioButton) return;
+          const active = audio && audio.isActive();
+          audioButton.textContent = active ? "Resonate (Audio on)" : "Resonate (Audio off)";
+          if (active) {
+            audioButton.classList.add("is-resonating");
+          } else {
+            audioButton.classList.remove("is-resonating");
+          }
+        }
+
         async function revealKey() {
           try {
             const response = await fetch("forgotten.key");
@@ -304,7 +359,9 @@
             decodedOutput.textContent = decoded || "The key would not translate.";
             openLink.href = decoded || "forgotten.key";
             openLink.removeAttribute("download");
-            memoryNote.textContent = "The old address is now visible. The raw key remains nearby, and your path back through the room stays seeded.";
+            
+            const verse = Engine.deriveVerse(seed, phase, 7);
+            memoryNote.textContent = `"${verse}" — The old address is now visible. The raw key remains nearby, and your path back through the room stays seeded.`;
           } catch (error) {
             decodedOutput.textContent = "The chamber could not reach the key.";
             memoryNote.textContent = "Fetch failed, but the raw key remains available as a file.";
@@ -356,21 +413,31 @@
         });
 
         audioButton.addEventListener("click", () => {
-          const isCurrentlyActive = audio.isActive();
-          audio.toggle(!isCurrentlyActive);
-          if (!isCurrentlyActive) {
-            audioButton.textContent = "Resonate (Audio on)";
-            audioButton.classList.add("is-resonating");
+          const active = audio.isActive();
+          audio.toggle(!active);
+          if (!active) {
             audio.setSeed(seed);
             audio.setPointer(0.5, 0.5, "cross");
-          } else {
-            audioButton.textContent = "Resonate (Audio off)";
-            audioButton.classList.remove("is-resonating");
           }
+          syncAudioUI();
         });
+
+        function updateAudioGlow() {
+          if (audio && audio.isActive()) {
+            const metrics = audio.getMetrics();
+            const pulse = 1.0 + metrics.lfoPhase * 0.12;
+            const envelope = 1.0 + (metrics.filterEnvelope - 0.5) * 0.08;
+            document.body.style.setProperty("--audio-bloom-glow", `${pulse * envelope}`);
+          } else {
+            document.body.style.setProperty("--audio-bloom-glow", "1.0");
+          }
+          requestAnimationFrame(updateAudioGlow);
+        }
+        requestAnimationFrame(updateAudioGlow);
 
         updateNavigation();
         populateAside();
+        syncAudioUI();
       });
     </script>
   </body>

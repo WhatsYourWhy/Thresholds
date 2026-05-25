@@ -489,12 +489,17 @@
     const baseNoise = 0.22 + rng() * 0.36;
     const baseSpeed = 0.35 + rng() * 0.32 + phaseIndex * 0.08;
 
+    const MODES = ["orbital", "constellation", "spiral"];
+    const defaultMode = MODES[hashString(cleanSeed) % MODES.length];
+    const mode = overrides.mode && MODES.includes(overrides.mode) ? overrides.mode : defaultMode;
+
     return {
       seed: cleanSeed,
       phase: activePhase,
       phaseIndex,
       reducedMotion,
       palette,
+      mode,
       iterations: Math.round(
         parseNumber(overrides.iterations, baseIterations, {
           min: 24,
@@ -598,14 +603,18 @@
       const rng = rngFrom(`${config.seed}:${config.phase}:dots`);
       const dots = [];
 
+      const isSpiral = config.mode === "spiral";
       for (let index = 0; index < config.iterations; index += 1) {
-        const theta = (index / config.iterations) * TAU;
+        const theta = (index / config.iterations) * TAU * (isSpiral ? 3.0 : 1.0);
+        const baseRadius = isSpiral
+          ? 0.05 + (index / config.iterations) * (config.orbitRadius * 0.9)
+          : config.orbitRadius;
         dots.push({
           theta,
           drift: rng() * TAU,
           radius:
-            config.orbitRadius +
-            (rng() - 0.5) * 0.18 +
+            baseRadius +
+            (rng() - 0.5) * (isSpiral ? 0.05 : 0.18) +
             Math.sin(theta * (2 + (index % 5))) * 0.06,
           weight: 0.55 + rng() * 1.35,
           band: Math.floor(rng() * 3),
@@ -704,6 +713,7 @@
         : Math.sin(pulse * 0.5) * 0.08;
       context.rotate(rotation);
 
+      const points = [];
       for (let index = 0; index < spec.dots.length; index += 1) {
         const dot = spec.dots[index];
         const wobble =
@@ -727,27 +737,88 @@
         x += (pointerX - x) * influence * dot.weight;
         y += (pointerY - y) * influence * dot.weight;
 
-        const innerRadius = scale * (0.15 + dot.weight * 0.015);
-        const innerAngle = angle - 0.12;
-        const innerX = Math.cos(innerAngle) * innerRadius;
-        const innerY = Math.sin(innerAngle) * innerRadius;
-        const bendX = (innerX + x) / 2 + Math.sin(pulse + dot.drift) * 10;
-        const bendY = (innerY + y) / 2 + Math.cos(pulse * 0.8 + dot.drift) * 10;
+        points.push({ x, y, angle, dot });
+      }
 
+      if (config.mode === "constellation") {
+        const step = Math.max(2, Math.floor(points.length / 6));
+        for (let i = 0; i < points.length; i++) {
+          const p1 = points[i];
+          const p2 = points[(i + 1) % points.length];
+          const p3 = points[(i + step) % points.length];
+
+          context.beginPath();
+          context.moveTo(p1.x, p1.y);
+          context.lineTo(p2.x, p2.y);
+          context.strokeStyle = toRgba(config.palette.line, 0.28 + p1.dot.weight * 0.05);
+          context.lineWidth = 0.8;
+          context.stroke();
+
+          if (i % 2 === 0) {
+            context.beginPath();
+            context.moveTo(p1.x, p1.y);
+            context.lineTo(p3.x, p3.y);
+            context.strokeStyle = toRgba(config.palette.accent, 0.15);
+            context.lineWidth = 0.6;
+            context.stroke();
+          }
+        }
+      } else if (config.mode === "spiral") {
         context.beginPath();
-        context.moveTo(innerX, innerY);
-        context.quadraticCurveTo(bendX, bendY, x, y);
-        context.strokeStyle =
-          dot.band === 0
-            ? toRgba(config.palette.accent, 0.62)
-            : toRgba(config.palette.line, 0.42 + dot.weight * 0.08);
-        context.lineWidth = dot.band === 0 ? 1.7 : 0.9 + dot.weight * 0.35;
+        for (let i = 0; i < points.length; i++) {
+          const p = points[i];
+          if (i === 0) {
+            context.moveTo(p.x, p.y);
+          } else {
+            const prev = points[i - 1];
+            const cx = (prev.x + p.x) / 2;
+            const cy = (prev.y + p.y) / 2;
+            context.quadraticCurveTo(prev.x, prev.y, cx, cy);
+          }
+        }
+        context.strokeStyle = toRgba(config.palette.line, 0.4);
+        context.lineWidth = 1.0;
         context.stroke();
 
+        for (let i = 0; i < points.length; i += 4) {
+          const p = points[i];
+          context.beginPath();
+          context.moveTo(p.x, p.y);
+          context.lineTo(p.x * 0.2, p.y * 0.2);
+          context.strokeStyle = toRgba(config.palette.accent, 0.12);
+          context.lineWidth = 0.5;
+          context.stroke();
+        }
+      } else {
+        // orbital (default)
+        for (let i = 0; i < points.length; i++) {
+          const p = points[i];
+          const innerRadius = scale * (0.15 + p.dot.weight * 0.015);
+          const innerAngle = p.angle - 0.12;
+          const innerX = Math.cos(innerAngle) * innerRadius;
+          const innerY = Math.sin(innerAngle) * innerRadius;
+          const bendX = (innerX + p.x) / 2 + Math.sin(pulse + p.dot.drift) * 10;
+          const bendY = (innerY + p.y) / 2 + Math.cos(pulse * 0.8 + p.dot.drift) * 10;
+
+          context.beginPath();
+          context.moveTo(innerX, innerY);
+          context.quadraticCurveTo(bendX, bendY, p.x, p.y);
+          context.strokeStyle =
+            p.dot.band === 0
+              ? toRgba(config.palette.accent, 0.62)
+              : toRgba(config.palette.line, 0.42 + p.dot.weight * 0.08);
+          context.lineWidth = p.dot.band === 0 ? 1.7 : 0.9 + p.dot.weight * 0.35;
+          context.stroke();
+        }
+      }
+
+      // Draw dots for all modes
+      for (let i = 0; i < points.length; i++) {
+        const p = points[i];
         context.beginPath();
-        context.arc(x, y, dot.band === 0 ? 2.1 : 1.45, 0, TAU);
+        context.arc(p.x, p.y, p.dot.band === 0 ? 2.1 : 1.45, 0, TAU);
         context.fillStyle =
-          dot.band === 0
+          p.dot.band === 0
             ? toRgba(config.palette.accent, 0.9)
             : toRgba(config.palette.line, 0.82);
         context.fill();
