@@ -33,6 +33,37 @@
         overflow: hidden;
       }
 
+      body::before,
+      body::after {
+        content: "";
+        position: fixed;
+        inset: auto;
+        pointer-events: none;
+        z-index: 0;
+        transform: scale(var(--audio-bloom-glow, 1));
+        transition: transform 120ms linear;
+      }
+
+      body::before {
+        width: 32rem;
+        height: 32rem;
+        top: -8rem;
+        right: -6rem;
+        border-radius: 50%;
+        background: radial-gradient(circle, rgba(255, 208, 137, 0.08), transparent 70%);
+        filter: blur(12px);
+      }
+
+      body::after {
+        width: 24rem;
+        height: 24rem;
+        bottom: -6rem;
+        left: -5rem;
+        border-radius: 50%;
+        background: radial-gradient(circle, rgba(149, 242, 255, 0.08), transparent 72%);
+        filter: blur(10px);
+      }
+
       .grain {
         position: fixed;
         inset: 0;
@@ -118,7 +149,7 @@
         border-color: rgba(255, 255, 255, 0.3);
       }
 
-      .sliders-section {
+      details.sliders-section {
         display: grid;
         gap: 1.1rem;
         padding: 1.1rem;
@@ -127,6 +158,60 @@
         border-radius: 1.2rem;
         backdrop-filter: blur(8px);
         margin-top: 0.5rem;
+      }
+
+      details.sliders-section summary {
+        font-family: "IBM Plex Mono", "Cascadia Code", "Fira Code", Consolas, monospace;
+        font-size: 0.72rem;
+        text-transform: uppercase;
+        letter-spacing: 0.16em;
+        color: var(--line);
+        cursor: pointer;
+        outline: none;
+        list-style: none;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        user-select: none;
+      }
+
+      details.sliders-section summary::-webkit-details-marker {
+        display: none;
+      }
+
+      details.sliders-section summary::after {
+        content: ":: [+]";
+        color: var(--accent);
+      }
+
+      details.sliders-section[open] summary::after {
+        content: ":: [-]";
+      }
+
+      details.sliders-section[open] > *:not(summary) {
+        margin-top: 0.5rem;
+      }
+
+      .sliders-section select {
+        appearance: none;
+        width: 100%;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        border-radius: 999px;
+        padding: 0.6rem 1rem;
+        color: inherit;
+        font-family: "IBM Plex Mono", "Cascadia Code", "Fira Code", Consolas, monospace;
+        font-size: 0.76rem;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        cursor: pointer;
+        outline: none;
+        transition: border-color 150ms ease;
+      }
+
+      .sliders-section select:hover,
+      .sliders-section select:focus {
+        border-color: rgba(255, 255, 255, 0.3);
       }
 
       .slider-group {
@@ -408,7 +493,16 @@
           <a id="room-link" href="../index.html">Return to the room</a>
           <a id="memory-link" href="../forgotten.html">Enter the memory chamber</a>
         </div>
-        <div class="sliders-section">
+        <details class="sliders-section" open>
+          <summary>Adjust Geometry</summary>
+          <div class="slider-group">
+            <label for="select-mode">Render Mode <span id="val-mode">orbital</span></label>
+            <select id="select-mode">
+              <option value="orbital">orbital</option>
+              <option value="constellation">constellation</option>
+              <option value="spiral">spiral</option>
+            </select>
+          </div>
           <div class="slider-group">
             <label for="slider-iterations">Iterations <span id="val-iterations">128</span></label>
             <input type="range" id="slider-iterations" min="24" max="720" value="128" step="1">
@@ -439,7 +533,7 @@
               <input type="color" id="color-accent" value="#ffd089">
             </div>
           </div>
-        </div>
+        </details>
         <dl class="manifest-list" id="manifest-list"></dl>
       </aside>
       <section class="viewport">
@@ -453,29 +547,34 @@
     <script>
       window.addEventListener("DOMContentLoaded", () => {
         const Engine = window.ThresholdsEngine;
+
+        const VISITED_KEY = "threshold-visited-chambers-v1";
+        function recordVisit(chamber) {
+          try {
+            let visited = JSON.parse(localStorage.getItem(VISITED_KEY) || "[]");
+            if (!Array.isArray(visited)) visited = [];
+            if (!visited.includes(chamber)) {
+              visited.push(chamber);
+              localStorage.setItem(VISITED_KEY, JSON.stringify(visited));
+            }
+          } catch (e) {}
+        }
+        recordVisit("observatory");
+
         const search = new URLSearchParams(window.location.search);
         const reduceMotion =
           window.matchMedia &&
           window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-        const rawOverrides = {
-          background: search.get("background"),
-          line: search.get("line"),
-          accent: search.get("accent"),
-          iterations: search.get("iterations"),
-          orbitRadius: search.get("orbitRadius"),
-          noise: search.get("noise"),
-          speed: search.get("speed"),
-        };
-
         const overrides = {
-          background: Engine.parseColor(rawOverrides.background, null),
-          line: Engine.parseColor(rawOverrides.line, null),
-          accent: Engine.parseColor(rawOverrides.accent, null),
-          iterations: Engine.parseNumber(rawOverrides.iterations, undefined, { min: 24, max: 720 }),
-          orbitRadius: Engine.parseNumber(rawOverrides.orbitRadius, undefined, { min: 0, max: 1 }),
-          noise: Engine.parseNumber(rawOverrides.noise, undefined, { min: 0, max: 1 }),
-          speed: Engine.parseNumber(rawOverrides.speed, undefined, { min: 0, max: 3 }),
+          background: Engine.parseColor(search.get("background"), null),
+          line: Engine.parseColor(search.get("line"), null),
+          accent: Engine.parseColor(search.get("accent"), null),
+          iterations: Engine.parseNumber(search.get("iterations"), undefined, { min: 24, max: 720 }),
+          orbitRadius: Engine.parseNumber(search.get("orbitRadius"), undefined, { min: 0, max: 1 }),
+          noise: Engine.parseNumber(search.get("noise"), undefined, { min: 0, max: 1 }),
+          speed: Engine.parseNumber(search.get("speed"), undefined, { min: 0, max: 3 }),
+          mode: ["orbital", "constellation", "spiral"].includes(search.get("mode")) ? search.get("mode") : undefined,
         };
 
         Object.keys(overrides).forEach((key) => {
@@ -530,6 +629,7 @@
           const rows = state.manifestEntries.concat([
             { key: "seed", value: state.seed },
             { key: "phase", value: state.phase },
+            { key: "mode", value: renderer.getState().config.mode },
             { key: "iterations", value: renderer.getState().config.iterations },
             { key: "noise", value: renderer.getState().config.noise.toFixed(2) },
           ]);
@@ -547,8 +647,7 @@
           } else {
             next.searchParams.delete("seed");
           }
-          // Use live state.overrides (not the stale rawOverrides snapshot)
-          const overrideKeys = ["background", "line", "accent", "iterations", "orbitRadius", "noise", "speed"];
+          const overrideKeys = ["background", "line", "accent", "iterations", "orbitRadius", "noise", "speed", "mode"];
           overrideKeys.forEach((key) => {
             const val = state.overrides[key];
             if (val !== null && val !== undefined) {
@@ -574,6 +673,8 @@
             `<span class="legend-sep">::</span>`,
             `<span class="legend-phase">${state.phase}</span>`,
             `<span class="legend-sep">/</span>`,
+            `<span class="legend-val">${config.mode}</span>`,
+            `<span class="legend-sep">/</span>`,
             `<span class="legend-val">${config.iterations} pts</span>`,
             `<span class="legend-sep">/</span>`,
             `<span class="legend-val">orbit ${config.orbitRadius.toFixed(2)}</span>`,
@@ -593,6 +694,17 @@
           memoryLink.href = `../forgotten.html?${query}`;
         }
 
+        function syncAudioUI() {
+          if (!audioButton) return;
+          const active = audio && audio.isActive();
+          audioButton.textContent = active ? "Resonate (A — on)" : "Resonate (A — off)";
+          if (active) {
+            audioButton.classList.add("is-resonating");
+          } else {
+            audioButton.classList.remove("is-resonating");
+          }
+        }
+
         function applyState() {
           updateTheme();
           renderer.setState({
@@ -606,6 +718,8 @@
           updateNavigation();
           syncUrl();
           updateSliders();
+          manifestList.hidden = !state.manifestOpen;
+          syncAudioUI();
           if (audio && audio.isActive()) {
             audio.setSeed(state.seed);
             audio.setPointer(0.5, 0.5, state.phase);
@@ -614,16 +728,22 @@
 
         function updateSliders() {
           const config = renderer.getState().config;
+          const modeInput = document.getElementById("select-mode");
           const iterInput = document.getElementById("slider-iterations");
           const orbitInput = document.getElementById("slider-orbit");
           const noiseInput = document.getElementById("slider-noise");
           const speedInput = document.getElementById("slider-speed");
 
+          const modeVal = document.getElementById("val-mode");
           const iterVal = document.getElementById("val-iterations");
           const orbitVal = document.getElementById("val-orbit");
           const noiseVal = document.getElementById("val-noise");
           const speedVal = document.getElementById("val-speed");
 
+          if (modeInput) {
+            modeInput.value = config.mode;
+            modeVal.textContent = config.mode;
+          }
           if (iterInput) {
             iterInput.value = config.iterations;
             iterVal.textContent = config.iterations;
@@ -646,6 +766,7 @@
         }
 
         function setupSliderListeners() {
+          const modeInput = document.getElementById("select-mode");
           const iterInput = document.getElementById("slider-iterations");
           const orbitInput = document.getElementById("slider-orbit");
           const noiseInput = document.getElementById("slider-noise");
@@ -653,7 +774,6 @@
 
           const updateOverride = (key, val) => {
             state.overrides[key] = val;
-            rawOverrides[key] = String(val);
             
             renderer.setState({
               seed: state.seed,
@@ -667,6 +787,7 @@
             syncUrl();
 
             const displayId = {
+              mode: "val-mode",
               iterations: "val-iterations",
               orbitRadius: "val-orbit",
               noise: "val-noise",
@@ -678,6 +799,11 @@
             }
           };
 
+          if (modeInput) {
+            modeInput.addEventListener("change", (e) => {
+              updateOverride("mode", e.target.value);
+            });
+          }
           iterInput.addEventListener("input", (e) => {
             updateOverride("iterations", parseInt(e.target.value, 10));
           });
@@ -719,10 +845,10 @@
         }
 
         function cyclePhase() {
-          document.body.classList.add(\"is-crossing\");
+          document.body.classList.add("is-crossing");
           state.phase = Engine.nextPhase(state.phase);
           applyState();
-          window.setTimeout(() => document.body.classList.remove(\"is-crossing\"), 450);
+          window.setTimeout(() => document.body.classList.remove("is-crossing"), 450);
         }
 
         phaseButton.addEventListener("click", cyclePhase);
@@ -757,17 +883,13 @@
           }
         });
         audioButton.addEventListener("click", () => {
-          const isCurrentlyActive = audio.isActive();
-          audio.toggle(!isCurrentlyActive);
-          if (!isCurrentlyActive) {
-            audioButton.textContent = "Resonate (A — on)";
-            audioButton.classList.add("is-resonating");
+          const active = audio.isActive();
+          audio.toggle(!active);
+          if (!active) {
             audio.setSeed(state.seed);
             audio.setPointer(0.5, 0.5, state.phase);
-          } else {
-            audioButton.textContent = "Resonate (A — off)";
-            audioButton.classList.remove("is-resonating");
           }
+          syncAudioUI();
         });
 
         window.addEventListener("keydown", (event) => {
@@ -780,17 +902,13 @@
           }
           if (key === "a") {
             event.preventDefault();
-            const isCurrentlyActive = audio.isActive();
-            audio.toggle(!isCurrentlyActive);
-            if (!isCurrentlyActive) {
-              audioButton.textContent = "Resonate (A — on)";
-              audioButton.classList.add("is-resonating");
+            const active = audio.isActive();
+            audio.toggle(!active);
+            if (!active) {
               audio.setSeed(state.seed);
               audio.setPointer(0.5, 0.5, state.phase);
-            } else {
-              audioButton.textContent = "Resonate (A — off)";
-              audioButton.classList.remove("is-resonating");
             }
+            syncAudioUI();
           }
           if (key === "p") {
             event.preventDefault();
@@ -804,6 +922,24 @@
           }
         });
 
+        function updateAudioGlow() {
+          if (audio && audio.isActive()) {
+            const metrics = audio.getMetrics();
+            const pulse = 1.0 + metrics.lfoPhase * 0.12;
+            const envelope = 1.0 + (metrics.filterEnvelope - 0.5) * 0.08;
+            document.body.style.setProperty("--audio-bloom-glow", `${pulse * envelope}`);
+          } else {
+            document.body.style.setProperty("--audio-bloom-glow", "1.0");
+          }
+          requestAnimationFrame(updateAudioGlow);
+        }
+        requestAnimationFrame(updateAudioGlow);
+
+        const slidersSection = document.querySelector(".sliders-section");
+        if (slidersSection) {
+          slidersSection.open = window.innerWidth > 960;
+        }
+
         setupSliderListeners();
         applyState();
         loadManifest();
@@ -811,6 +947,3 @@
     </script>
   </body>
 </html>
-
-
-

@@ -242,6 +242,22 @@ test.describe("threshold room", () => {
     await expect(page.locator("body")).toHaveAttribute("data-motion", "reduced");
     await expect(page.locator("[data-testid='room-canvas']")).toBeVisible();
   });
+
+  test("observatory supports mode selection and url synchronization", async ({ page }) => {
+    const url = `http://localhost:${listening.port}/Sigil/threshold.html?seed=door-salt&mode=spiral`;
+    await page.goto(url);
+
+    const select = page.locator("#select-mode");
+    await expect(select).toBeVisible();
+    await expect(select).toHaveValue("spiral");
+
+    await select.selectOption("constellation");
+    await expect(page).toHaveURL(/mode=constellation/);
+
+    const manifest = page.locator("#manifest-list");
+    await expect(manifest).toContainText("mode");
+    await expect(manifest).toContainText("constellation");
+  });
 });
 
 test.describe("mobile thresholds", () => {
@@ -276,8 +292,13 @@ test.describe("mobile thresholds", () => {
       "https://whatsyourwhy.github.io/",
     );
   });
+
+  test("observatory geometry section collapses on mobile viewports", async ({ page }) => {
+    await page.goto(`http://localhost:${listening.port}/Sigil/threshold.html?seed=mobile-collapse`);
+
+    const details = page.locator("details.sliders-section");
+    await expect(details).toBeVisible();
+    const open = await details.getAttribute("open");
+    expect(open).toBeNull();
+  });
 });
-
-
-
-

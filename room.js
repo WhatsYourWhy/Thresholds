@@ -1,5 +1,32 @@
 window.addEventListener("DOMContentLoaded", () => {
 const Engine = window.ThresholdsEngine;
+
+const VISITED_KEY = "threshold-visited-chambers-v1";
+function recordVisit(chamber) {
+  try {
+    let visited = JSON.parse(localStorage.getItem(VISITED_KEY) || "[]");
+    if (!Array.isArray(visited)) visited = [];
+    if (!visited.includes(chamber)) {
+      visited.push(chamber);
+      localStorage.setItem(VISITED_KEY, JSON.stringify(visited));
+    }
+  } catch (e) {}
+}
+
+function hasVisitedAll() {
+  try {
+    const visited = JSON.parse(localStorage.getItem(VISITED_KEY) || "[]");
+    return Array.isArray(visited) &&
+      visited.includes("room") &&
+      visited.includes("observatory") &&
+      visited.includes("memory");
+  } catch (e) {
+    return false;
+  }
+}
+
+recordVisit("room");
+
 const search = new URLSearchParams(window.location.search);
 const reduceMotion =
   window.matchMedia &&
@@ -79,13 +106,26 @@ function updateTheme() {
   body.style.setProperty("--mist", palette.mist);
 }
 
+function syncAudioUI() {
+  if (!audioButton) return;
+  const active = audio && audio.isActive();
+  audioButton.textContent = active ? "Resonate (A — on)" : "Resonate (A — off)";
+  if (active) {
+    audioButton.classList.add("is-resonating");
+  } else {
+    audioButton.classList.remove("is-resonating");
+  }
+}
+
 function renderManifest() {
   const derived = Engine.deriveText(state.seed, state.phase);
+  const isTriad = hasVisitedAll() ? "threefold" : "incomplete";
   const rows = state.manifestEntries.concat([
     { key: "seed", value: state.seed },
     { key: "phase", value: state.phase },
     { key: "drift", value: derived.drift[0] },
     { key: "palette", value: Engine.derivePalette(state.seed, state.phase).name },
+    { key: "corridors", value: isTriad },
   ]);
 
   manifestList.innerHTML = rows
@@ -112,8 +152,7 @@ function renderText() {
   captureButton.textContent = "Capture echo (C)";
   verseButton.textContent = "Invoke omen (V)";
   manifestButton.textContent = state.manifestOpen ? "Hide manifest (M)" : "Show manifest (M)";
-  const audioLabel = audio && audio.isActive() ? "Resonate (A — on)" : "Resonate (A — off)";
-  audioButton.textContent = audioLabel;
+  syncAudioUI();
   canvasPrompt.textContent = `Touch the field :: advance to ${nextPhase}`;
 
   driftGrid.innerHTML = text.drift
@@ -162,6 +201,91 @@ function writeStoredEchoes() {
   }
 }
 
+function drawTinySigil(canvas, seed, phase) {
+  const ctx = canvas.getContext("2d");
+  const width = canvas.width;
+  const height = canvas.height;
+  ctx.clearRect(0, 0, width, height);
+
+  const config = Engine.deriveSigilConfig({ seed, phase });
+  ctx.fillStyle = config.palette.background;
+  ctx.fillRect(0, 0, width, height);
+
+  ctx.save();
+  ctx.translate(width / 2, height / 2);
+  
+  const scale = Math.min(width, height) * 0.35;
+  const iterations = Math.min(24, Math.round(config.iterations / 4));
+
+  ctx.beginPath();
+  ctx.arc(0, 0, scale * 0.18, 0, Math.PI * 2);
+  ctx.fillStyle = config.palette.accentSoft;
+  ctx.fill();
+
+  ctx.beginPath();
+  ctx.arc(0, 0, scale * 0.12, 0, Math.PI * 2);
+  ctx.strokeStyle = config.palette.line;
+  ctx.lineWidth = 0.5;
+  ctx.stroke();
+
+  if (config.mode === "spiral") {
+    ctx.beginPath();
+    for (let i = 0; i < iterations; i++) {
+      const theta = (i / iterations) * Math.PI * 2 * 2;
+      const radius = (0.1 + (i / iterations) * (config.orbitRadius * 0.9)) * scale;
+      const x = Math.cos(theta) * radius;
+      const y = Math.sin(theta) * radius;
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    ctx.strokeStyle = config.palette.line;
+    ctx.lineWidth = 0.6;
+    ctx.stroke();
+  } else if (config.mode === "constellation") {
+    const pts = [];
+    for (let i = 0; i < iterations; i++) {
+      const theta = (i / iterations) * Math.PI * 2;
+      const radius = config.orbitRadius * scale;
+      pts.push({
+        x: Math.cos(theta) * radius,
+        y: Math.sin(theta) * radius
+      });
+    }
+    ctx.beginPath();
+    for (let i = 0; i < pts.length; i++) {
+      const p1 = pts[i];
+      const p2 = pts[(i + 1) % pts.length];
+      ctx.moveTo(p1.x, p1.y);
+      ctx.lineTo(p2.x, p2.y);
+    }
+    ctx.strokeStyle = config.palette.line;
+    ctx.lineWidth = 0.5;
+    ctx.stroke();
+  } else {
+    // orbital (default)
+    for (let i = 0; i < iterations; i++) {
+      const theta = (i / iterations) * Math.PI * 2;
+      const radius = config.orbitRadius * scale;
+      const x = Math.cos(theta) * radius;
+      const y = Math.sin(theta) * radius;
+
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.lineTo(x, y);
+      ctx.strokeStyle = config.palette.lineSoft;
+      ctx.lineWidth = 0.4;
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.arc(x, y, 0.8, 0, Math.PI * 2);
+      ctx.fillStyle = config.palette.accent;
+      ctx.fill();
+    }
+  }
+
+  ctx.restore();
+}
+
 function renderEchoes() {
   if (!state.echoes.length) {
     echoList.innerHTML =
@@ -174,9 +298,16 @@ function renderEchoes() {
   echoList.innerHTML = state.echoes
     .map(
       (entry, index) =>
-        `<li><button type="button" data-echo-index="${index}"><span>${entry.seed}<span class="echo-meta">${formatCapturedAt(entry.capturedAt)}</span></span><span class="echo-phase">${entry.phase}</span></button></li>`,
+        `<li><button type="button" data-echo-index="${index}"><canvas class="echo-sigil" width="24" height="24"></canvas><span>${entry.seed}<span class="echo-meta">${formatCapturedAt(entry.capturedAt)}</span></span><span class="echo-phase">${entry.phase}</span></button></li>`,
     )
     .join("");
+
+  echoList.querySelectorAll(".echo-sigil").forEach((canvasEl, idx) => {
+    const entry = state.echoes[idx];
+    if (entry) {
+      drawTinySigil(canvasEl, entry.seed, entry.phase);
+    }
+  });
 }
 
 function formatCapturedAt(input) {
@@ -197,6 +328,13 @@ function captureEcho() {
   state.echoes = next;
   writeStoredEchoes();
   renderEchoes();
+
+  const shelf = document.querySelector(".echo-shelf");
+  if (shelf) {
+    shelf.classList.remove("captured-flash");
+    void shelf.offsetWidth; // force reflow
+    shelf.classList.add("captured-flash");
+  }
 }
 
 function syncUrl() {
@@ -443,16 +581,12 @@ manifestButton.addEventListener("click", () => {
   focusShortcutLayer();
 });
 audioButton.addEventListener("click", () => {
-  const isCurrentlyActive = audio.isActive();
-  audio.toggle(!isCurrentlyActive);
-  if (!isCurrentlyActive) {
-    audioButton.textContent = "Resonate (A — on)";
-    audioButton.classList.add("is-resonating");
+  const active = audio.isActive();
+  audio.toggle(!active);
+  if (!active) {
     audio.setPointer(0.5, 0.5, state.phase);
-  } else {
-    audioButton.textContent = "Resonate (A — off)";
-    audioButton.classList.remove("is-resonating");
   }
+  syncAudioUI();
   focusShortcutLayer();
   resetIdleTimer();
 });
@@ -517,16 +651,12 @@ function handleShortcut(event) {
   }
   if (key === "a" || code === "KeyA") {
     event.preventDefault();
-    const isCurrentlyActive = audio.isActive();
-    audio.toggle(!isCurrentlyActive);
-    if (!isCurrentlyActive) {
-      audioButton.textContent = "Resonate (Audio on)";
-      audioButton.classList.add("is-resonating");
+    const active = audio.isActive();
+    audio.toggle(!active);
+    if (!active) {
       audio.setPointer(0.5, 0.5, state.phase);
-    } else {
-      audioButton.textContent = "Resonate (Audio off)";
-      audioButton.classList.remove("is-resonating");
     }
+    syncAudioUI();
     resetIdleTimer();
     return;
   }
@@ -550,5 +680,18 @@ state.echoes = readStoredEchoes();
 renderEchoes();
 loadArtifacts();
 resetIdleTimer();
+function updateAudioGlow() {
+  if (audio && audio.isActive()) {
+    const metrics = audio.getMetrics();
+    const pulse = 1.0 + metrics.lfoPhase * 0.12;
+    const envelope = 1.0 + (metrics.filterEnvelope - 0.5) * 0.08;
+    body.style.setProperty("--audio-bloom-glow", `${pulse * envelope}`);
+  } else {
+    body.style.setProperty("--audio-bloom-glow", "1.0");
+  }
+  requestAnimationFrame(updateAudioGlow);
+}
+requestAnimationFrame(updateAudioGlow);
+
 focusShortcutLayer();
 });
