@@ -607,6 +607,7 @@
         const roomLink = document.getElementById("room-link");
         const memoryLink = document.getElementById("memory-link");
         const audio = Engine.createResonanceCircuit();
+        const audioGlow = Engine.createAudioGlowController(audio, document.body);
 
         const renderer = Engine.createSigilRenderer({
           canvas,
@@ -703,6 +704,7 @@
           } else {
             audioButton.classList.remove("is-resonating");
           }
+          audioGlow.sync();
         }
 
         function applyState() {
@@ -921,19 +923,6 @@
             manifestButton.textContent = state.manifestOpen ? "Hide manifest (M)" : "Show manifest (M)";
           }
         });
-
-        function updateAudioGlow() {
-          if (audio && audio.isActive()) {
-            const metrics = audio.getMetrics();
-            const pulse = 1.0 + metrics.lfoPhase * 0.12;
-            const envelope = 1.0 + (metrics.filterEnvelope - 0.5) * 0.08;
-            document.body.style.setProperty("--audio-bloom-glow", `${pulse * envelope}`);
-          } else {
-            document.body.style.setProperty("--audio-bloom-glow", "1.0");
-          }
-          requestAnimationFrame(updateAudioGlow);
-        }
-        requestAnimationFrame(updateAudioGlow);
 
         const slidersSection = document.querySelector(".sliders-section");
         if (slidersSection) {
