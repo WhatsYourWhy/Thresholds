@@ -95,6 +95,33 @@ test.describe("threshold room", () => {
     await expect(page.locator("#seed-value")).not.toHaveText(firstSeed || "");
   });
 
+  test("audio glow idles until resonance is enabled", async ({ page }) => {
+    await page.addInitScript(() => {
+      window.__audioBloomGlowWrites = 0;
+      const originalSetProperty = CSSStyleDeclaration.prototype.setProperty;
+      CSSStyleDeclaration.prototype.setProperty = function (name, value, priority) {
+        if (name === "--audio-bloom-glow") {
+          window.__audioBloomGlowWrites += 1;
+        }
+        return originalSetProperty.call(this, name, value, priority);
+      };
+    });
+
+    await page.goto(`http://localhost:${listening.port}/index.html?seed=quiet-glow`);
+    await page.waitForTimeout(250);
+    expect(await page.evaluate(() => window.__audioBloomGlowWrites)).toBe(0);
+
+    await page.locator("#audio-button").click();
+    await page.waitForFunction(() => window.__audioBloomGlowWrites > 2);
+    expect(await page.evaluate(() => window.__audioBloomGlowWrites)).toBeGreaterThan(2);
+
+    await page.locator("#audio-button").click();
+    await page.waitForTimeout(100);
+    const writesAfterStop = await page.evaluate(() => window.__audioBloomGlowWrites);
+    await page.waitForTimeout(150);
+    expect(await page.evaluate(() => window.__audioBloomGlowWrites)).toBe(writesAfterStop);
+  });
+
   test("soft secret can be dismissed without blocking the room", async ({ page }) => {
     const url = `http://localhost:${listening.port}/index.html?seed=door-salt&phase=approach`;
     await page.goto(url);

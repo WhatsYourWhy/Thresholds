@@ -77,6 +77,7 @@ const clearEchoesButton = document.getElementById("clear-echoes-button");
 const copyLinkButton = document.getElementById("copy-link-button");
 const audioButton = document.getElementById("audio-button");
 const audio = Engine.createResonanceCircuit();
+const audioGlow = Engine.createAudioGlowController(audio, body);
 
 const ECHO_STORAGE_KEY = "threshold-room-echoes-v1";
 
@@ -115,6 +116,7 @@ function syncAudioUI() {
   } else {
     audioButton.classList.remove("is-resonating");
   }
+  audioGlow.sync();
 }
 
 function renderManifest() {
@@ -680,18 +682,6 @@ state.echoes = readStoredEchoes();
 renderEchoes();
 loadArtifacts();
 resetIdleTimer();
-function updateAudioGlow() {
-  if (audio && audio.isActive()) {
-    const metrics = audio.getMetrics();
-    const pulse = 1.0 + metrics.lfoPhase * 0.12;
-    const envelope = 1.0 + (metrics.filterEnvelope - 0.5) * 0.08;
-    body.style.setProperty("--audio-bloom-glow", `${pulse * envelope}`);
-  } else {
-    body.style.setProperty("--audio-bloom-glow", "1.0");
-  }
-  requestAnimationFrame(updateAudioGlow);
-}
-requestAnimationFrame(updateAudioGlow);
 
 focusShortcutLayer();
 });
