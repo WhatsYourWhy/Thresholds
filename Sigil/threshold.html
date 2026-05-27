@@ -767,6 +767,7 @@
         const roomLink = document.getElementById("room-link");
         const memoryLink = document.getElementById("memory-link");
         const audio = Engine.createResonanceCircuit();
+        const audioGlow = Engine.createAudioGlowController(audio, document.body);
 
         const renderer = Engine.createSigilRenderer({
           canvas,
@@ -1223,6 +1224,11 @@
             toggleVoidResonance();
           }
         });
+
+        const slidersSection = document.querySelector(".sliders-section");
+        if (slidersSection) {
+          slidersSection.open = window.innerWidth > 960;
+        }
 
         setupSliderListeners();
         applyState();

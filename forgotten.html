@@ -361,6 +361,7 @@
         const returnLink = document.getElementById("return-link");
         const memoryNote = document.getElementById("memory-note");
         const audio = Engine.createResonanceCircuit();
+        const audioGlow = Engine.createAudioGlowController(audio, document.body);
 
         const rendererOverrides = {
           speed: reduceMotion ? 0.18 : 0.36,

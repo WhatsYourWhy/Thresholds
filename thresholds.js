@@ -1137,6 +1137,71 @@
     };
   }
 
+  function createAudioGlowController(audio, target) {
+    const glowTarget = target || (global.document && global.document.body);
+    const neutralGlow = "1.0";
+    let frameHandle = null;
+    let glowApplied = false;
+
+    function applyGlow(value) {
+      if (!glowTarget || !glowTarget.style) return;
+      glowTarget.style.setProperty("--audio-bloom-glow", value);
+      glowApplied = true;
+    }
+
+    function resetGlow() {
+      if (!glowApplied || !glowTarget || !glowTarget.style) return;
+      glowTarget.style.setProperty("--audio-bloom-glow", neutralGlow);
+      glowApplied = false;
+    }
+
+    function queueFrame() {
+      if (typeof global.requestAnimationFrame !== "function") return;
+      frameHandle = global.requestAnimationFrame(update);
+    }
+
+    function update() {
+      if (!audio || !audio.isActive()) {
+        frameHandle = null;
+        resetGlow();
+        return;
+      }
+
+      const metrics = audio.getMetrics();
+      const pulse = 1.0 + metrics.lfoPhase * 0.12;
+      const envelope = 1.0 + (metrics.filterEnvelope - 0.5) * 0.08;
+      applyGlow(`${pulse * envelope}`);
+      queueFrame();
+    }
+
+    function start() {
+      if (frameHandle !== null || !audio || !audio.isActive()) return;
+      queueFrame();
+    }
+
+    function stop() {
+      if (frameHandle !== null && typeof global.cancelAnimationFrame === "function") {
+        global.cancelAnimationFrame(frameHandle);
+      }
+      frameHandle = null;
+      resetGlow();
+    }
+
+    function sync() {
+      if (audio && audio.isActive()) {
+        start();
+      } else {
+        stop();
+      }
+    }
+
+    return {
+      start,
+      stop,
+      sync,
+    };
+  }
+
   global.ThresholdsEngine = {
     PHASES,
     sanitizeSeed,
@@ -1153,5 +1218,6 @@
     decodeBase64,
     createSigilRenderer,
     createResonanceCircuit,
+    createAudioGlowController,
   };
 })(window);
