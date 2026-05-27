@@ -707,6 +707,12 @@
 
         const voidActive =
           search.get("void") === "true" || search.get("mode") === "void";
+        const queryMode = search.get("mode");
+        const parsedMode = ["orbital", "constellation", "spiral", "void"].includes(
+          queryMode,
+        )
+          ? queryMode
+          : undefined;
         const overrides = {
           background: Engine.parseColor(search.get("background"), null),
           line: Engine.parseColor(search.get("line"), null),
@@ -728,11 +734,7 @@
             min: 0,
             max: 3,
           }),
-          mode: ["orbital", "constellation", "spiral", "void"].includes(
-            search.get("mode"),
-          )
-            ? search.get("mode")
-            : undefined,
+          mode: parsedMode || (voidActive ? "void" : undefined),
           void: voidActive ? true : undefined,
         };
 
@@ -1224,11 +1226,6 @@
             toggleVoidResonance();
           }
         });
-
-        const slidersSection = document.querySelector(".sliders-section");
-        if (slidersSection) {
-          slidersSection.open = window.innerWidth > 960;
-        }
 
         setupSliderListeners();
         applyState();
