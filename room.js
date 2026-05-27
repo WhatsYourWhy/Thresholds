@@ -1,687 +1,795 @@
 window.addEventListener("DOMContentLoaded", () => {
-const Engine = window.ThresholdsEngine;
+  const Engine = window.ThresholdsEngine;
 
-const VISITED_KEY = "threshold-visited-chambers-v1";
-function recordVisit(chamber) {
-  try {
-    let visited = JSON.parse(localStorage.getItem(VISITED_KEY) || "[]");
-    if (!Array.isArray(visited)) visited = [];
-    if (!visited.includes(chamber)) {
-      visited.push(chamber);
-      localStorage.setItem(VISITED_KEY, JSON.stringify(visited));
-    }
-  } catch (e) {}
-}
-
-function hasVisitedAll() {
-  try {
-    const visited = JSON.parse(localStorage.getItem(VISITED_KEY) || "[]");
-    return Array.isArray(visited) &&
-      visited.includes("room") &&
-      visited.includes("observatory") &&
-      visited.includes("memory");
-  } catch (e) {
-    return false;
+  const VISITED_KEY = "threshold-visited-chambers-v1";
+  function recordVisit(chamber) {
+    try {
+      let visited = JSON.parse(localStorage.getItem(VISITED_KEY) || "[]");
+      if (!Array.isArray(visited)) visited = [];
+      if (!visited.includes(chamber)) {
+        visited.push(chamber);
+        localStorage.setItem(VISITED_KEY, JSON.stringify(visited));
+      }
+    } catch (e) {}
   }
-}
 
-recordVisit("room");
-
-const search = new URLSearchParams(window.location.search);
-const reduceMotion =
-  window.matchMedia &&
-  window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-
-const state = {
-  seed: Engine.sanitizeSeed(search.get("seed")) || Engine.generateSeed(),
-  phase: Engine.parsePhase(search.get("phase")),
-  persistSeed: search.has("seed"),
-  manifestOpen: window.innerWidth > 1080,
-  secretVisible: false,
-  manifestEntries: [],
-  memoryUrl: "",
-  echoes: [],
-  omenIndex: 0,
-};
-
-const body = document.body;
-const room = document.querySelector(".room");
-const canvas = document.getElementById("room-canvas");
-const title = document.getElementById("room-title");
-const whisper = document.getElementById("room-whisper");
-const mantra = document.getElementById("room-mantra");
-const dreamline = document.getElementById("room-dreamline");
-const driftGrid = document.getElementById("drift-grid");
-const phaseChip = document.getElementById("phase-chip");
-const seedValue = document.getElementById("seed-value");
-const motionValue = document.getElementById("motion-value");
-const glyphValue = document.getElementById("glyph-value");
-const manifestPanel = document.getElementById("manifest-panel");
-const manifestList = document.getElementById("manifest-list");
-const manifestStatus = document.getElementById("manifest-status");
-const phaseButton = document.getElementById("phase-button");
-const reseedButton = document.getElementById("reseed-button");
-const manifestButton = document.getElementById("manifest-button");
-const captureButton = document.getElementById("capture-button");
-const verseButton = document.getElementById("verse-button");
-const canvasPrompt = document.getElementById("canvas-prompt");
-const secretPanel = document.getElementById("secret-panel");
-const secretCopy = document.getElementById("secret-copy");
-const secretMeta = document.getElementById("secret-meta");
-const secretLink = document.getElementById("secret-link");
-const secretClose = document.getElementById("secret-close");
-const observatoryLink = document.getElementById("observatory-link");
-const memoryLink = document.getElementById("memory-link");
-const echoList = document.getElementById("echo-list");
-const clearEchoesButton = document.getElementById("clear-echoes-button");
-const copyLinkButton = document.getElementById("copy-link-button");
-const audioButton = document.getElementById("audio-button");
-const audio = Engine.createResonanceCircuit();
-const audioGlow = Engine.createAudioGlowController(audio, body);
-
-const ECHO_STORAGE_KEY = "threshold-room-echoes-v1";
-
-body.dataset.motion = reduceMotion ? "reduced" : "full";
-motionValue.textContent = reduceMotion ? "reduced" : "full";
-
-const renderer = Engine.createSigilRenderer({
-  canvas,
-  seed: state.seed,
-  phase: state.phase,
-  reducedMotion: reduceMotion,
-  audioSource: audio,
-});
-
-let idleTimer = 0;
-let holdTimer = 0;
-let secretTimer = 0;
-
-room.tabIndex = -1;
-
-function updateTheme() {
-  const palette = Engine.derivePalette(state.seed, state.phase);
-  body.style.setProperty("--bg", palette.background);
-  body.style.setProperty("--line", palette.line);
-  body.style.setProperty("--accent", palette.accent);
-  body.style.setProperty("--panel", palette.panel);
-  body.style.setProperty("--mist", palette.mist);
-}
-
-function syncAudioUI() {
-  if (!audioButton) return;
-  const active = audio && audio.isActive();
-  audioButton.textContent = active ? "Resonate (A — on)" : "Resonate (A — off)";
-  if (active) {
-    audioButton.classList.add("is-resonating");
-  } else {
-    audioButton.classList.remove("is-resonating");
-  }
-  audioGlow.sync();
-}
-
-function renderManifest() {
-  const derived = Engine.deriveText(state.seed, state.phase);
-  const isTriad = hasVisitedAll() ? "threefold" : "incomplete";
-  const rows = state.manifestEntries.concat([
-    { key: "seed", value: state.seed },
-    { key: "phase", value: state.phase },
-    { key: "drift", value: derived.drift[0] },
-    { key: "palette", value: Engine.derivePalette(state.seed, state.phase).name },
-    { key: "corridors", value: isTriad },
-  ]);
-
-  manifestList.innerHTML = rows
-    .map(
-      (row) =>
-        `<div class="manifest-row"><dt>${row.key}</dt><dd>${row.value}</dd></div>`,
-    )
-    .join("");
-}
-
-function renderText() {
-  const text = Engine.deriveText(state.seed, state.phase);
-  title.textContent = text.title;
-  whisper.textContent = text.whisper;
-  mantra.textContent = text.mantra;
-  dreamline.textContent = Engine.deriveVerse(state.seed, state.phase, state.omenIndex);
-  phaseChip.textContent = state.phase;
-  seedValue.textContent = state.seed;
-  glyphValue.textContent = text.glyph;
-  manifestStatus.textContent = state.phase;
-  const nextPhase = Engine.nextPhase(state.phase);
-  phaseButton.textContent = `Advance to ${nextPhase}`;
-  reseedButton.textContent = "Reseed (R)";
-  captureButton.textContent = "Capture echo (C)";
-  verseButton.textContent = "Invoke omen (V)";
-  manifestButton.textContent = state.manifestOpen ? "Hide manifest (M)" : "Show manifest (M)";
-  syncAudioUI();
-  canvasPrompt.textContent = `Touch the field :: advance to ${nextPhase}`;
-
-  driftGrid.innerHTML = text.drift
-    .map(
-      (entry, index) =>
-        `<span style="--index:${index}" aria-hidden="true">${entry}</span>`,
-    )
-    .join("");
-
-  // Re-trigger stagger animation on every render by forcing reflow
-  driftGrid.querySelectorAll("span").forEach((span) => {
-    span.style.animation = "none";
-    void span.offsetWidth; // reflow
-    span.style.animation = "";
-  });
-
-  if (state.secretVisible) {
-    secretCopy.textContent = text.secret;
-  }
-}
-
-function readStoredEchoes() {
-  try {
-    const raw = window.localStorage.getItem(ECHO_STORAGE_KEY);
-    const parsed = JSON.parse(raw || "[]");
-    if (!Array.isArray(parsed)) return [];
-    return parsed
-      .filter(
-        (entry) =>
-          entry &&
-          typeof entry.seed === "string" &&
-          typeof entry.phase === "string" &&
-          typeof entry.capturedAt === "string",
-      )
-      .slice(0, 8);
-  } catch (error) {
-    return [];
-  }
-}
-
-function writeStoredEchoes() {
-  try {
-    window.localStorage.setItem(ECHO_STORAGE_KEY, JSON.stringify(state.echoes.slice(0, 8)));
-  } catch (error) {
-    // storage is optional for this room
-  }
-}
-
-function drawTinySigil(canvas, seed, phase) {
-  const ctx = canvas.getContext("2d");
-  const width = canvas.width;
-  const height = canvas.height;
-  ctx.clearRect(0, 0, width, height);
-
-  const config = Engine.deriveSigilConfig({ seed, phase });
-  ctx.fillStyle = config.palette.background;
-  ctx.fillRect(0, 0, width, height);
-
-  ctx.save();
-  ctx.translate(width / 2, height / 2);
-  
-  const scale = Math.min(width, height) * 0.35;
-  const iterations = Math.min(24, Math.round(config.iterations / 4));
-
-  ctx.beginPath();
-  ctx.arc(0, 0, scale * 0.18, 0, Math.PI * 2);
-  ctx.fillStyle = config.palette.accentSoft;
-  ctx.fill();
-
-  ctx.beginPath();
-  ctx.arc(0, 0, scale * 0.12, 0, Math.PI * 2);
-  ctx.strokeStyle = config.palette.line;
-  ctx.lineWidth = 0.5;
-  ctx.stroke();
-
-  if (config.mode === "spiral") {
-    ctx.beginPath();
-    for (let i = 0; i < iterations; i++) {
-      const theta = (i / iterations) * Math.PI * 2 * 2;
-      const radius = (0.1 + (i / iterations) * (config.orbitRadius * 0.9)) * scale;
-      const x = Math.cos(theta) * radius;
-      const y = Math.sin(theta) * radius;
-      if (i === 0) ctx.moveTo(x, y);
-      else ctx.lineTo(x, y);
-    }
-    ctx.strokeStyle = config.palette.line;
-    ctx.lineWidth = 0.6;
-    ctx.stroke();
-  } else if (config.mode === "constellation") {
-    const pts = [];
-    for (let i = 0; i < iterations; i++) {
-      const theta = (i / iterations) * Math.PI * 2;
-      const radius = config.orbitRadius * scale;
-      pts.push({
-        x: Math.cos(theta) * radius,
-        y: Math.sin(theta) * radius
-      });
-    }
-    ctx.beginPath();
-    for (let i = 0; i < pts.length; i++) {
-      const p1 = pts[i];
-      const p2 = pts[(i + 1) % pts.length];
-      ctx.moveTo(p1.x, p1.y);
-      ctx.lineTo(p2.x, p2.y);
-    }
-    ctx.strokeStyle = config.palette.line;
-    ctx.lineWidth = 0.5;
-    ctx.stroke();
-  } else {
-    // orbital (default)
-    for (let i = 0; i < iterations; i++) {
-      const theta = (i / iterations) * Math.PI * 2;
-      const radius = config.orbitRadius * scale;
-      const x = Math.cos(theta) * radius;
-      const y = Math.sin(theta) * radius;
-
-      ctx.beginPath();
-      ctx.moveTo(0, 0);
-      ctx.lineTo(x, y);
-      ctx.strokeStyle = config.palette.lineSoft;
-      ctx.lineWidth = 0.4;
-      ctx.stroke();
-
-      ctx.beginPath();
-      ctx.arc(x, y, 0.8, 0, Math.PI * 2);
-      ctx.fillStyle = config.palette.accent;
-      ctx.fill();
+  function hasVisitedAll() {
+    try {
+      const visited = JSON.parse(localStorage.getItem(VISITED_KEY) || "[]");
+      return (
+        Array.isArray(visited) &&
+        visited.includes("room") &&
+        visited.includes("observatory") &&
+        visited.includes("memory")
+      );
+    } catch (e) {
+      return false;
     }
   }
 
-  ctx.restore();
-}
+  recordVisit("room");
 
-function renderEchoes() {
-  if (!state.echoes.length) {
-    echoList.innerHTML =
-      '<li><button type="button" disabled><span>No echoes yet</span><span class="echo-phase">capture one</span></button></li>';
-    clearEchoesButton.disabled = true;
-    return;
-  }
-  clearEchoesButton.disabled = false;
+  const search = new URLSearchParams(window.location.search);
+  const reduceMotion =
+    window.matchMedia &&
+    window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-  echoList.innerHTML = state.echoes
-    .map(
-      (entry, index) =>
-        `<li><button type="button" data-echo-index="${index}"><canvas class="echo-sigil" width="24" height="24"></canvas><span>${entry.seed}<span class="echo-meta">${formatCapturedAt(entry.capturedAt)}</span></span><span class="echo-phase">${entry.phase}</span></button></li>`,
-    )
-    .join("");
+  const state = {
+    seed: Engine.sanitizeSeed(search.get("seed")) || Engine.generateSeed(),
+    phase: Engine.parsePhase(search.get("phase")),
+    persistSeed: search.has("seed"),
+    manifestOpen: window.innerWidth > 1080,
+    secretVisible: false,
+    manifestEntries: [],
+    memoryUrl: "",
+    echoes: [],
+    omenIndex: 0,
+    voidActive: search.get("void") === "true",
+  };
 
-  echoList.querySelectorAll(".echo-sigil").forEach((canvasEl, idx) => {
-    const entry = state.echoes[idx];
-    if (entry) {
-      drawTinySigil(canvasEl, entry.seed, entry.phase);
-    }
-  });
-}
+  const body = document.body;
+  const room = document.querySelector(".room");
+  const canvas = document.getElementById("room-canvas");
+  const title = document.getElementById("room-title");
+  const whisper = document.getElementById("room-whisper");
+  const mantra = document.getElementById("room-mantra");
+  const dreamline = document.getElementById("room-dreamline");
+  const driftGrid = document.getElementById("drift-grid");
+  const phaseChip = document.getElementById("phase-chip");
+  const seedValue = document.getElementById("seed-value");
+  const motionValue = document.getElementById("motion-value");
+  const glyphValue = document.getElementById("glyph-value");
+  const manifestPanel = document.getElementById("manifest-panel");
+  const manifestList = document.getElementById("manifest-list");
+  const manifestStatus = document.getElementById("manifest-status");
+  const phaseButton = document.getElementById("phase-button");
+  const reseedButton = document.getElementById("reseed-button");
+  const manifestButton = document.getElementById("manifest-button");
+  const captureButton = document.getElementById("capture-button");
+  const verseButton = document.getElementById("verse-button");
+  const canvasPrompt = document.getElementById("canvas-prompt");
+  const secretPanel = document.getElementById("secret-panel");
+  const secretCopy = document.getElementById("secret-copy");
+  const secretMeta = document.getElementById("secret-meta");
+  const secretLink = document.getElementById("secret-link");
+  const secretClose = document.getElementById("secret-close");
+  const observatoryLink = document.getElementById("observatory-link");
+  const memoryLink = document.getElementById("memory-link");
+  const echoList = document.getElementById("echo-list");
+  const clearEchoesButton = document.getElementById("clear-echoes-button");
+  const copyLinkButton = document.getElementById("copy-link-button");
+  const audioButton = document.getElementById("audio-button");
+  const audio = Engine.createResonanceCircuit();
 
-function formatCapturedAt(input) {
-  const capturedAt = new Date(input);
-  if (Number.isNaN(capturedAt.getTime())) return "just now";
-  return capturedAt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-}
+  const ECHO_STORAGE_KEY = "threshold-room-echoes-v1";
 
-function captureEcho() {
-  const next = [{ seed: state.seed, phase: state.phase, capturedAt: new Date().toISOString() }]
-    .concat(state.echoes)
-    .filter(
-      (entry, index, list) =>
-        list.findIndex((candidate) => candidate.seed === entry.seed && candidate.phase === entry.phase) ===
-        index,
-    )
-    .slice(0, 8);
-  state.echoes = next;
-  writeStoredEchoes();
-  renderEchoes();
+  body.dataset.motion = reduceMotion ? "reduced" : "full";
+  motionValue.textContent = reduceMotion ? "reduced" : "full";
 
-  const shelf = document.querySelector(".echo-shelf");
-  if (shelf) {
-    shelf.classList.remove("captured-flash");
-    void shelf.offsetWidth; // force reflow
-    shelf.classList.add("captured-flash");
-  }
-}
-
-function syncUrl() {
-  const next = new URL(window.location.href);
-  next.searchParams.set("phase", state.phase);
-  if (state.persistSeed) {
-    next.searchParams.set("seed", state.seed);
-  } else {
-    next.searchParams.delete("seed");
-  }
-  const target = `${next.pathname}${next.search}${next.hash}`;
-  window.history.replaceState({}, "", target);
-}
-
-function updateNavigation() {
-  const query = new URLSearchParams({
-    seed: state.seed,
-    phase: state.phase,
-  }).toString();
-  observatoryLink.href = `Sigil/threshold.html?${query}`;
-  memoryLink.href = `forgotten.html?${query}`;
-  if (!state.secretVisible || !state.memoryUrl) {
-    secretLink.href = `forgotten.html?${query}`;
-    secretLink.textContent = "Continue into the memory chamber";
-  }
-}
-
-function applyState() {
-  body.dataset.phase = state.phase;
-  updateTheme();
-  renderText();
-  renderManifest();
-  updateNavigation();
-  renderer.setState({
+  const renderer = Engine.createSigilRenderer({
+    canvas,
     seed: state.seed,
     phase: state.phase,
     reducedMotion: reduceMotion,
+    audioSource: audio,
   });
-  manifestPanel.dataset.open = String(state.manifestOpen);
-  syncUrl();
-  // Always pre-warm audio pitch so it's ready when the user enables resonance
-  if (audio) {
-    audio.setSeed(state.seed);
-  }
-  if (audio && audio.isActive()) {
-    audio.setPointer(0.5, 0.5, state.phase);
-  }
-}
 
-function focusShortcutLayer() {
-  const active = document.activeElement;
-  if (active && active.matches && active.matches("input, textarea, select, [contenteditable='true']")) {
-    return;
-  }
-  room.focus({ preventScroll: true });
-}
+  let idleTimer = 0;
+  let holdTimer = 0;
+  let secretTimer = 0;
 
-function hideSecret() {
-  state.secretVisible = false;
-  secretPanel.classList.remove("is-visible");
-  window.clearTimeout(secretTimer);
-  updateNavigation();
-}
+  room.tabIndex = -1;
 
-function scheduleSecretHide() {
-  window.clearTimeout(secretTimer);
-  secretTimer = window.setTimeout(() => hideSecret(), reduceMotion ? 12000 : 8000);
-}
-
-function cyclePhase() {
-  hideSecret();
-  document.body.classList.add("is-crossing");
-  state.phase = Engine.nextPhase(state.phase);
-  state.omenIndex = 0;
-  applyState();
-  window.setTimeout(() => document.body.classList.remove("is-crossing"), 520);
-  resetIdleTimer();
-}
-
-function revealSecret(source) {
-  state.secretVisible = true;
-  secretPanel.classList.add("is-visible");
-  const text = Engine.deriveText(state.seed, state.phase);
-  secretCopy.textContent = text.secret;
-  secretMeta.textContent =
-    source === "hold"
-      ? "The room answered a held touch. Press Esc to dismiss it."
-      : "The room offered this while you were still. Press Esc to dismiss it.";
-  const fallbackMemory = `forgotten.html?seed=${state.seed}&phase=${state.phase}`;
-  secretLink.href = state.memoryUrl || fallbackMemory;
-  secretLink.textContent = state.memoryUrl
-    ? `Follow the old address :: ${state.memoryUrl}`
-    : "Continue into the memory chamber";
-  scheduleSecretHide();
-}
-
-window.__thresholdRoomTest = {
-  revealSecret,
-  hideSecret,
-  getState: () => ({
-    seed: state.seed,
-    phase: state.phase,
-    manifestOpen: state.manifestOpen,
-    secretVisible: state.secretVisible,
-  }),
-};
-
-function resetIdleTimer() {
-  window.clearTimeout(idleTimer);
-  idleTimer = window.setTimeout(
-    () => revealSecret("idle"),
-    reduceMotion ? 14000 : 9000,
-  );
-}
-
-function clearHoldTimer() {
-  window.clearTimeout(holdTimer);
-  holdTimer = 0;
-}
-
-async function loadArtifacts() {
-  const [manifestResponse, keyResponse] = await Promise.allSettled([
-    fetch("threshold.yaml"),
-    fetch("forgotten.key"),
-  ]);
-
-  if (manifestResponse.status === "fulfilled" && manifestResponse.value.ok) {
-    const manifestText = await manifestResponse.value.text();
-    state.manifestEntries = Engine.parseManifest(manifestText);
-  } else {
-    state.manifestEntries = [
-      { key: "manifest", value: "unheard" },
-      { key: "loop", value: "half-open" },
-    ];
+  function updateTheme() {
+    const overrides = state.voidActive ? { void: true } : {};
+    const palette = Engine.derivePalette(state.seed, state.phase, overrides);
+    body.style.setProperty("--bg", palette.background);
+    body.style.setProperty("--line", palette.line);
+    body.style.setProperty("--accent", palette.accent);
+    body.style.setProperty("--panel", palette.panel);
+    body.style.setProperty("--mist", palette.mist);
   }
 
-  if (keyResponse.status === "fulfilled" && keyResponse.value.ok) {
-    const keyText = await keyResponse.value.text();
-    state.memoryUrl = Engine.decodeBase64(keyText);
-  }
-
-  renderManifest();
-}
-
-room.addEventListener("pointermove", (event) => {
-  const rect = canvas.getBoundingClientRect();
-  const px = (event.clientX - rect.left) / rect.width;
-  const py = (event.clientY - rect.top) / rect.height;
-  renderer.setPointer({
-    x: px,
-    y: py,
-    active: true,
-  });
-  resetIdleTimer();
-  if (audio && audio.isActive()) {
-    audio.setPointer(px, py, state.phase);
-  }
-});
-
-room.addEventListener("pointerleave", () => {
-  renderer.clearPointer();
-  if (audio && audio.isActive()) {
-    audio.setPointer(0.5, 0.5, state.phase);
-  }
-});
-
-room.addEventListener("pointerdown", (event) => {
-  focusShortcutLayer();
-  if (event.target.closest("a, button")) return;
-  hideSecret();
-  resetIdleTimer();
-  clearHoldTimer();
-  holdTimer = window.setTimeout(() => revealSecret("hold"), 850);
-});
-
-room.addEventListener("pointerup", clearHoldTimer);
-room.addEventListener("pointercancel", clearHoldTimer);
-
-room.addEventListener("click", (event) => {
-  if (event.target.closest("a, button")) return;
-  cyclePhase();
-});
-
-phaseButton.addEventListener("click", () => {
-  cyclePhase();
-  focusShortcutLayer();
-});
-canvasPrompt.addEventListener("click", () => {
-  cyclePhase();
-  focusShortcutLayer();
-});
-reseedButton.addEventListener("click", () => {
-  hideSecret();
-  state.seed = Engine.generateSeed();
-  state.omenIndex = 0;
-  applyState();
-  resetIdleTimer();
-  focusShortcutLayer();
-});
-captureButton.addEventListener("click", () => {
-  captureEcho();
-  focusShortcutLayer();
-  resetIdleTimer();
-});
-verseButton.addEventListener("click", () => {
-  state.omenIndex += 1;
-  renderText();
-  focusShortcutLayer();
-  resetIdleTimer();
-});
-clearEchoesButton.addEventListener("click", () => {
-  state.echoes = [];
-  writeStoredEchoes();
-  renderEchoes();
-  hideSecret();
-  focusShortcutLayer();
-});
-copyLinkButton.addEventListener("click", async () => {
-  const link = new URL(window.location.href);
-  link.searchParams.set("seed", state.seed);
-  link.searchParams.set("phase", state.phase);
-  const shareable = link.toString();
-  try {
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      await navigator.clipboard.writeText(shareable);
-      copyLinkButton.textContent = "Copied";
+  function syncAudioUI() {
+    if (!audioButton) return;
+    const active = audio && audio.isActive();
+    audioButton.textContent = active
+      ? "Resonate (A — on)"
+      : "Resonate (A — off)";
+    if (active) {
+      audioButton.classList.add("is-resonating");
     } else {
-      copyLinkButton.textContent = "Copy manually";
+      audioButton.classList.remove("is-resonating");
     }
-  } catch (error) {
-    copyLinkButton.textContent = "Copy manually";
   }
-  window.setTimeout(() => {
-    copyLinkButton.textContent = "Copy ritual link";
-  }, 1500);
-  resetIdleTimer();
-});
-manifestButton.addEventListener("click", () => {
-  hideSecret();
-  state.manifestOpen = !state.manifestOpen;
-  manifestPanel.dataset.open = String(state.manifestOpen);
-  renderText();
-  resetIdleTimer();
-  focusShortcutLayer();
-});
-audioButton.addEventListener("click", () => {
-  const active = audio.isActive();
-  audio.toggle(!active);
-  if (!active) {
-    audio.setPointer(0.5, 0.5, state.phase);
-  }
-  syncAudioUI();
-  focusShortcutLayer();
-  resetIdleTimer();
-});
-secretClose.addEventListener("click", () => {
-  hideSecret();
-  focusShortcutLayer();
-});
-echoList.addEventListener("click", (event) => {
-  const button = event.target.closest("button[data-echo-index]");
-  if (!button) return;
-  const index = Number(button.dataset.echoIndex);
-  if (!Number.isInteger(index) || !state.echoes[index]) return;
-  hideSecret();
-  state.seed = state.echoes[index].seed;
-  state.phase = Engine.parsePhase(state.echoes[index].phase);
-  state.omenIndex = 0;
-  state.persistSeed = true;
-  applyState();
-  focusShortcutLayer();
-  resetIdleTimer();
-});
 
-function handleShortcut(event) {
-  if (event.defaultPrevented || event.metaKey || event.ctrlKey || event.altKey) {
-    return;
+  function renderManifest() {
+    const derived = Engine.deriveText(state.seed, state.phase);
+    const isTriad = hasVisitedAll() ? "threefold" : "incomplete";
+    const overrides = state.voidActive ? { void: true } : {};
+    const palette = Engine.derivePalette(state.seed, state.phase, overrides);
+    const rows = state.manifestEntries.concat([
+      { key: "seed", value: state.seed },
+      { key: "phase", value: state.phase },
+      { key: "drift", value: derived.drift[0] },
+      { key: "palette", value: palette.name },
+      { key: "corridors", value: isTriad },
+    ]);
+
+    manifestList.innerHTML = rows
+      .map((row) => {
+        if (row.key === "corridors" && hasVisitedAll()) {
+          const activeClass = state.voidActive ? "is-void-active" : "";
+          return `<div class="manifest-row clickable-manifest-row ${activeClass}" id="manifest-toggle-void" role="button" tabindex="0" title="Click to toggle Void Resonance"><dt>${row.key}</dt><dd>${row.value}</dd></div>`;
+        }
+        return `<div class="manifest-row"><dt>${row.key}</dt><dd>${row.value}</dd></div>`;
+      })
+      .join("");
   }
-  const target = event.target;
-  if (target && target.matches && target.matches("input, textarea, select, [contenteditable='true']")) {
-    return;
+
+  function renderText() {
+    const text = Engine.deriveText(state.seed, state.phase);
+    title.textContent = text.title;
+    whisper.textContent = text.whisper;
+    mantra.textContent = text.mantra;
+    dreamline.textContent = Engine.deriveVerse(
+      state.seed,
+      state.phase,
+      state.omenIndex,
+    );
+    phaseChip.textContent = state.phase;
+    seedValue.textContent = state.seed;
+    glyphValue.textContent = text.glyph;
+    manifestStatus.textContent = state.phase;
+    const nextPhase = Engine.nextPhase(state.phase);
+    phaseButton.textContent = `Advance to ${nextPhase}`;
+    reseedButton.textContent = "Reseed (R)";
+    captureButton.textContent = "Capture echo (C)";
+    verseButton.textContent = "Invoke omen (V)";
+    manifestButton.textContent = state.manifestOpen
+      ? "Hide manifest (M)"
+      : "Show manifest (M)";
+    syncAudioUI();
+    canvasPrompt.textContent = `Touch the field :: advance to ${nextPhase}`;
+
+    driftGrid.innerHTML = text.drift
+      .map(
+        (entry, index) =>
+          `<span style="--index:${index}" aria-hidden="true">${entry}</span>`,
+      )
+      .join("");
+
+    // Re-trigger stagger animation on every render by forcing reflow
+    driftGrid.querySelectorAll("span").forEach((span) => {
+      span.style.animation = "none";
+      void span.offsetWidth; // reflow
+      span.style.animation = "";
+    });
+
+    if (state.secretVisible) {
+      secretCopy.textContent = text.secret;
+    }
   }
-  const key = typeof event.key === "string" ? event.key.toLowerCase() : "";
-  const code = typeof event.code === "string" ? event.code : "";
-  if (key === "r" || code === "KeyR") {
-    event.preventDefault();
+
+  function readStoredEchoes() {
+    try {
+      const raw = window.localStorage.getItem(ECHO_STORAGE_KEY);
+      const parsed = JSON.parse(raw || "[]");
+      if (!Array.isArray(parsed)) return [];
+      return parsed
+        .filter(
+          (entry) =>
+            entry &&
+            typeof entry.seed === "string" &&
+            typeof entry.phase === "string" &&
+            typeof entry.capturedAt === "string",
+        )
+        .slice(0, 8);
+    } catch (error) {
+      return [];
+    }
+  }
+
+  function writeStoredEchoes() {
+    try {
+      window.localStorage.setItem(
+        ECHO_STORAGE_KEY,
+        JSON.stringify(state.echoes.slice(0, 8)),
+      );
+    } catch (error) {
+      // storage is optional for this room
+    }
+  }
+
+  function drawTinySigil(canvas, seed, phase) {
+    const ctx = canvas.getContext("2d");
+    const width = canvas.width;
+    const height = canvas.height;
+    ctx.clearRect(0, 0, width, height);
+
+    const config = Engine.deriveSigilConfig({ seed, phase });
+    ctx.fillStyle = config.palette.background;
+    ctx.fillRect(0, 0, width, height);
+
+    ctx.save();
+    ctx.translate(width / 2, height / 2);
+
+    const scale = Math.min(width, height) * 0.35;
+    const iterations = Math.min(24, Math.round(config.iterations / 4));
+
+    ctx.beginPath();
+    ctx.arc(0, 0, scale * 0.18, 0, Math.PI * 2);
+    ctx.fillStyle = config.palette.accentSoft;
+    ctx.fill();
+
+    ctx.beginPath();
+    ctx.arc(0, 0, scale * 0.12, 0, Math.PI * 2);
+    ctx.strokeStyle = config.palette.line;
+    ctx.lineWidth = 0.5;
+    ctx.stroke();
+
+    if (config.mode === "spiral") {
+      ctx.beginPath();
+      for (let i = 0; i < iterations; i++) {
+        const theta = (i / iterations) * Math.PI * 2 * 2;
+        const radius =
+          (0.1 + (i / iterations) * (config.orbitRadius * 0.9)) * scale;
+        const x = Math.cos(theta) * radius;
+        const y = Math.sin(theta) * radius;
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
+      ctx.strokeStyle = config.palette.line;
+      ctx.lineWidth = 0.6;
+      ctx.stroke();
+    } else if (config.mode === "constellation") {
+      const pts = [];
+      for (let i = 0; i < iterations; i++) {
+        const theta = (i / iterations) * Math.PI * 2;
+        const radius = config.orbitRadius * scale;
+        pts.push({
+          x: Math.cos(theta) * radius,
+          y: Math.sin(theta) * radius,
+        });
+      }
+      ctx.beginPath();
+      for (let i = 0; i < pts.length; i++) {
+        const p1 = pts[i];
+        const p2 = pts[(i + 1) % pts.length];
+        ctx.moveTo(p1.x, p1.y);
+        ctx.lineTo(p2.x, p2.y);
+      }
+      ctx.strokeStyle = config.palette.line;
+      ctx.lineWidth = 0.5;
+      ctx.stroke();
+    } else {
+      // orbital (default)
+      for (let i = 0; i < iterations; i++) {
+        const theta = (i / iterations) * Math.PI * 2;
+        const radius = config.orbitRadius * scale;
+        const x = Math.cos(theta) * radius;
+        const y = Math.sin(theta) * radius;
+
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.lineTo(x, y);
+        ctx.strokeStyle = config.palette.lineSoft;
+        ctx.lineWidth = 0.4;
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.arc(x, y, 0.8, 0, Math.PI * 2);
+        ctx.fillStyle = config.palette.accent;
+        ctx.fill();
+      }
+    }
+
+    ctx.restore();
+  }
+
+  function renderEchoes() {
+    if (!state.echoes.length) {
+      echoList.innerHTML =
+        '<li><button type="button" disabled><span>No echoes yet</span><span class="echo-phase">capture one</span></button></li>';
+      clearEchoesButton.disabled = true;
+      return;
+    }
+    clearEchoesButton.disabled = false;
+
+    echoList.innerHTML = state.echoes
+      .map(
+        (entry, index) =>
+          `<li><button type="button" data-echo-index="${index}"><canvas class="echo-sigil" width="24" height="24"></canvas><span>${entry.seed}<span class="echo-meta">${formatCapturedAt(entry.capturedAt)}</span></span><span class="echo-phase">${entry.phase}</span></button></li>`,
+      )
+      .join("");
+
+    echoList.querySelectorAll(".echo-sigil").forEach((canvasEl, idx) => {
+      const entry = state.echoes[idx];
+      if (entry) {
+        drawTinySigil(canvasEl, entry.seed, entry.phase);
+      }
+    });
+  }
+
+  function formatCapturedAt(input) {
+    const capturedAt = new Date(input);
+    if (Number.isNaN(capturedAt.getTime())) return "just now";
+    return capturedAt.toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  }
+
+  function captureEcho() {
+    const next = [
+      {
+        seed: state.seed,
+        phase: state.phase,
+        capturedAt: new Date().toISOString(),
+      },
+    ]
+      .concat(state.echoes)
+      .filter(
+        (entry, index, list) =>
+          list.findIndex(
+            (candidate) =>
+              candidate.seed === entry.seed && candidate.phase === entry.phase,
+          ) === index,
+      )
+      .slice(0, 8);
+    state.echoes = next;
+    writeStoredEchoes();
+    renderEchoes();
+
+    const shelf = document.querySelector(".echo-shelf");
+    if (shelf) {
+      shelf.classList.remove("captured-flash");
+      void shelf.offsetWidth; // force reflow
+      shelf.classList.add("captured-flash");
+    }
+  }
+
+  function syncUrl() {
+    const next = new URL(window.location.href);
+    next.searchParams.set("phase", state.phase);
+    if (state.persistSeed) {
+      next.searchParams.set("seed", state.seed);
+    } else {
+      next.searchParams.delete("seed");
+    }
+    if (state.voidActive) {
+      next.searchParams.set("void", "true");
+    } else {
+      next.searchParams.delete("void");
+    }
+    const target = `${next.pathname}${next.search}${next.hash}`;
+    window.history.replaceState({}, "", target);
+  }
+
+  function updateNavigation() {
+    const params = {
+      seed: state.seed,
+      phase: state.phase,
+    };
+    if (state.voidActive) {
+      params.void = "true";
+    }
+    const query = new URLSearchParams(params).toString();
+    observatoryLink.href = `Sigil/threshold.html?${query}`;
+    memoryLink.href = `forgotten.html?${query}`;
+    if (!state.secretVisible || !state.memoryUrl) {
+      secretLink.href = `forgotten.html?${query}`;
+      secretLink.textContent = "Continue into the memory chamber";
+    }
+  }
+
+  function applyState() {
+    body.dataset.phase = state.phase;
+    if (state.voidActive) {
+      body.classList.add("is-void");
+    } else {
+      body.classList.remove("is-void");
+    }
+    updateTheme();
+    renderText();
+    renderManifest();
+    updateNavigation();
+    const overrides = state.voidActive ? { void: true, mode: "void" } : {};
+    renderer.setState({
+      seed: state.seed,
+      phase: state.phase,
+      reducedMotion: reduceMotion,
+      overrides: overrides,
+    });
+    manifestPanel.dataset.open = String(state.manifestOpen);
+    syncUrl();
+    // Always pre-warm audio pitch so it's ready when the user enables resonance
+    if (audio) {
+      if (typeof audio.setVoidMode === "function") {
+        audio.setVoidMode(state.voidActive);
+      }
+      audio.setSeed(state.seed);
+    }
+    if (audio && audio.isActive()) {
+      audio.setPointer(0.5, 0.5, state.phase);
+    }
+  }
+
+  function focusShortcutLayer() {
+    const active = document.activeElement;
+    if (
+      active &&
+      active.matches &&
+      active.matches("input, textarea, select, [contenteditable='true']")
+    ) {
+      return;
+    }
+    room.focus({ preventScroll: true });
+  }
+
+  function hideSecret() {
+    state.secretVisible = false;
+    secretPanel.classList.remove("is-visible");
+    window.clearTimeout(secretTimer);
+    updateNavigation();
+  }
+
+  function scheduleSecretHide() {
+    window.clearTimeout(secretTimer);
+    secretTimer = window.setTimeout(
+      () => hideSecret(),
+      reduceMotion ? 12000 : 8000,
+    );
+  }
+
+  function cyclePhase() {
+    hideSecret();
+    document.body.classList.add("is-crossing");
+    state.phase = Engine.nextPhase(state.phase);
+    state.omenIndex = 0;
+    applyState();
+    window.setTimeout(() => document.body.classList.remove("is-crossing"), 520);
+    resetIdleTimer();
+  }
+
+  function revealSecret(source) {
+    state.secretVisible = true;
+    secretPanel.classList.add("is-visible");
+    const text = Engine.deriveText(state.seed, state.phase);
+    secretCopy.textContent = text.secret;
+    secretMeta.textContent =
+      source === "hold"
+        ? "The room answered a held touch. Press Esc to dismiss it."
+        : "The room offered this while you were still. Press Esc to dismiss it.";
+
+    const params = { seed: state.seed, phase: state.phase };
+    if (state.voidActive) params.void = "true";
+    const fallbackMemory = `forgotten.html?${new URLSearchParams(params).toString()}`;
+
+    let targetMemoryUrl = state.memoryUrl || fallbackMemory;
+    if (state.voidActive && state.memoryUrl) {
+      const divider = state.memoryUrl.includes("?") ? "&" : "?";
+      targetMemoryUrl = `${state.memoryUrl}${divider}void=true`;
+    }
+
+    secretLink.href = targetMemoryUrl;
+    secretLink.textContent = state.memoryUrl
+      ? `Follow the old address :: ${state.memoryUrl}`
+      : "Continue into the memory chamber";
+    scheduleSecretHide();
+  }
+
+  window.__thresholdRoomTest = {
+    revealSecret,
+    hideSecret,
+    getState: () => ({
+      seed: state.seed,
+      phase: state.phase,
+      manifestOpen: state.manifestOpen,
+      secretVisible: state.secretVisible,
+    }),
+  };
+
+  function resetIdleTimer() {
+    window.clearTimeout(idleTimer);
+    idleTimer = window.setTimeout(
+      () => revealSecret("idle"),
+      reduceMotion ? 14000 : 9000,
+    );
+  }
+
+  function clearHoldTimer() {
+    window.clearTimeout(holdTimer);
+    holdTimer = 0;
+  }
+
+  async function loadArtifacts() {
+    const [manifestResponse, keyResponse] = await Promise.allSettled([
+      fetch("threshold.yaml"),
+      fetch("forgotten.key"),
+    ]);
+
+    if (manifestResponse.status === "fulfilled" && manifestResponse.value.ok) {
+      const manifestText = await manifestResponse.value.text();
+      state.manifestEntries = Engine.parseManifest(manifestText);
+    } else {
+      state.manifestEntries = [
+        { key: "manifest", value: "unheard" },
+        { key: "loop", value: "half-open" },
+      ];
+    }
+
+    if (keyResponse.status === "fulfilled" && keyResponse.value.ok) {
+      const keyText = await keyResponse.value.text();
+      state.memoryUrl = Engine.decodeBase64(keyText);
+    }
+
+    renderManifest();
+  }
+
+  room.addEventListener("pointermove", (event) => {
+    const rect = canvas.getBoundingClientRect();
+    const px = (event.clientX - rect.left) / rect.width;
+    const py = (event.clientY - rect.top) / rect.height;
+    renderer.setPointer({
+      x: px,
+      y: py,
+      active: true,
+    });
+    resetIdleTimer();
+    if (audio && audio.isActive()) {
+      audio.setPointer(px, py, state.phase);
+    }
+  });
+
+  room.addEventListener("pointerleave", () => {
+    renderer.clearPointer();
+    if (audio && audio.isActive()) {
+      audio.setPointer(0.5, 0.5, state.phase);
+    }
+  });
+
+  room.addEventListener("pointerdown", (event) => {
+    focusShortcutLayer();
+    if (event.target.closest("a, button")) return;
+    hideSecret();
+    resetIdleTimer();
+    clearHoldTimer();
+    holdTimer = window.setTimeout(() => revealSecret("hold"), 850);
+  });
+
+  room.addEventListener("pointerup", clearHoldTimer);
+  room.addEventListener("pointercancel", clearHoldTimer);
+
+  room.addEventListener("click", (event) => {
+    if (event.target.closest("a, button")) return;
+    cyclePhase();
+  });
+
+  phaseButton.addEventListener("click", () => {
+    cyclePhase();
+    focusShortcutLayer();
+  });
+  canvasPrompt.addEventListener("click", () => {
+    cyclePhase();
+    focusShortcutLayer();
+  });
+  reseedButton.addEventListener("click", () => {
     hideSecret();
     state.seed = Engine.generateSeed();
+    state.omenIndex = 0;
     applyState();
     resetIdleTimer();
-    return;
+    focusShortcutLayer();
+  });
+  captureButton.addEventListener("click", () => {
+    captureEcho();
+    focusShortcutLayer();
+    resetIdleTimer();
+  });
+  verseButton.addEventListener("click", () => {
+    state.omenIndex += 1;
+    renderText();
+    focusShortcutLayer();
+    resetIdleTimer();
+  });
+  clearEchoesButton.addEventListener("click", () => {
+    state.echoes = [];
+    writeStoredEchoes();
+    renderEchoes();
+    hideSecret();
+    focusShortcutLayer();
+  });
+  copyLinkButton.addEventListener("click", async () => {
+    const link = new URL(window.location.href);
+    link.searchParams.set("seed", state.seed);
+    link.searchParams.set("phase", state.phase);
+    const shareable = link.toString();
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(shareable);
+        copyLinkButton.textContent = "Copied";
+      } else {
+        copyLinkButton.textContent = "Copy manually";
+      }
+    } catch (error) {
+      copyLinkButton.textContent = "Copy manually";
+    }
+    window.setTimeout(() => {
+      copyLinkButton.textContent = "Copy ritual link";
+    }, 1500);
+    resetIdleTimer();
+  });
+  function toggleVoidResonance() {
+    state.voidActive = !state.voidActive;
+    applyState();
+    focusShortcutLayer();
   }
-  if (key === "m" || code === "KeyM") {
-    event.preventDefault();
+
+  manifestList.addEventListener("click", (event) => {
+    const toggle = event.target.closest("#manifest-toggle-void");
+    if (toggle) {
+      toggleVoidResonance();
+    }
+  });
+
+  manifestList.addEventListener("keydown", (event) => {
+    const toggle = event.target.closest("#manifest-toggle-void");
+    if (toggle && (event.key === "Enter" || event.key === " ")) {
+      event.preventDefault();
+      toggleVoidResonance();
+    }
+  });
+
+  manifestButton.addEventListener("click", () => {
     hideSecret();
     state.manifestOpen = !state.manifestOpen;
     manifestPanel.dataset.open = String(state.manifestOpen);
     renderText();
     resetIdleTimer();
-    return;
-  }
-  if (key === "c" || code === "KeyC") {
-    event.preventDefault();
-    captureEcho();
-    resetIdleTimer();
-    return;
-  }
-  if (key === "v" || code === "KeyV") {
-    event.preventDefault();
-    state.omenIndex += 1;
-    renderText();
-    resetIdleTimer();
-    return;
-  }
-  if (key === "a" || code === "KeyA") {
-    event.preventDefault();
+    focusShortcutLayer();
+  });
+  audioButton.addEventListener("click", () => {
     const active = audio.isActive();
     audio.toggle(!active);
     if (!active) {
       audio.setPointer(0.5, 0.5, state.phase);
     }
     syncAudioUI();
+    focusShortcutLayer();
     resetIdleTimer();
-    return;
-  }
-  if (key === "escape" || code === "Escape") {
-    event.preventDefault();
+  });
+  secretClose.addEventListener("click", () => {
     hideSecret();
+    focusShortcutLayer();
+  });
+  echoList.addEventListener("click", (event) => {
+    const button = event.target.closest("button[data-echo-index]");
+    if (!button) return;
+    const index = Number(button.dataset.echoIndex);
+    if (!Number.isInteger(index) || !state.echoes[index]) return;
+    hideSecret();
+    state.seed = state.echoes[index].seed;
+    state.phase = Engine.parsePhase(state.echoes[index].phase);
+    state.omenIndex = 0;
+    state.persistSeed = true;
+    applyState();
+    focusShortcutLayer();
+    resetIdleTimer();
+  });
+
+  function handleShortcut(event) {
+    if (
+      event.defaultPrevented ||
+      event.metaKey ||
+      event.ctrlKey ||
+      event.altKey
+    ) {
+      return;
+    }
+    const target = event.target;
+    if (
+      target &&
+      target.matches &&
+      target.matches("input, textarea, select, [contenteditable='true']")
+    ) {
+      return;
+    }
+    const key = typeof event.key === "string" ? event.key.toLowerCase() : "";
+    const code = typeof event.code === "string" ? event.code : "";
+    if (key === "r" || code === "KeyR") {
+      event.preventDefault();
+      hideSecret();
+      state.seed = Engine.generateSeed();
+      applyState();
+      resetIdleTimer();
+      return;
+    }
+    if (key === "m" || code === "KeyM") {
+      event.preventDefault();
+      hideSecret();
+      state.manifestOpen = !state.manifestOpen;
+      manifestPanel.dataset.open = String(state.manifestOpen);
+      renderText();
+      resetIdleTimer();
+      return;
+    }
+    if (key === "c" || code === "KeyC") {
+      event.preventDefault();
+      captureEcho();
+      resetIdleTimer();
+      return;
+    }
+    if (key === "v" || code === "KeyV") {
+      event.preventDefault();
+      state.omenIndex += 1;
+      renderText();
+      resetIdleTimer();
+      return;
+    }
+    if (key === "a" || code === "KeyA") {
+      event.preventDefault();
+      const active = audio.isActive();
+      audio.toggle(!active);
+      if (!active) {
+        audio.setPointer(0.5, 0.5, state.phase);
+      }
+      syncAudioUI();
+      resetIdleTimer();
+      return;
+    }
+    if (key === "escape" || code === "Escape") {
+      event.preventDefault();
+      hideSecret();
+    }
   }
-}
 
-window.addEventListener("keydown", handleShortcut, { capture: true });
+  window.addEventListener("keydown", handleShortcut, { capture: true });
 
-window.addEventListener("resize", () => {
-  if (window.innerWidth > 1080 && !state.secretVisible) {
-    state.manifestOpen = true;
+  window.addEventListener("resize", () => {
+    if (window.innerWidth > 1080 && !state.secretVisible) {
+      state.manifestOpen = true;
+    }
+    manifestPanel.dataset.open = String(state.manifestOpen);
+  });
+
+  applyState();
+  state.echoes = readStoredEchoes();
+  renderEchoes();
+  loadArtifacts();
+  resetIdleTimer();
+  function updateAudioGlow() {
+    if (audio && audio.isActive()) {
+      const metrics = audio.getMetrics();
+      const pulse = 1.0 + metrics.lfoPhase * 0.12;
+      const envelope = 1.0 + (metrics.filterEnvelope - 0.5) * 0.08;
+      body.style.setProperty("--audio-bloom-glow", `${pulse * envelope}`);
+    } else {
+      body.style.setProperty("--audio-bloom-glow", "1.0");
+    }
+    requestAnimationFrame(updateAudioGlow);
   }
-  manifestPanel.dataset.open = String(state.manifestOpen);
-});
+  requestAnimationFrame(updateAudioGlow);
 
-applyState();
-state.echoes = readStoredEchoes();
-renderEchoes();
-loadArtifacts();
-resetIdleTimer();
-
-focusShortcutLayer();
+  focusShortcutLayer();
 });

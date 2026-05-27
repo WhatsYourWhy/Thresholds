@@ -26,10 +26,15 @@
       body {
         min-height: 100vh;
         background:
-          radial-gradient(circle at 15% 20%, rgba(255, 255, 255, 0.05), transparent 20%),
+          radial-gradient(
+            circle at 15% 20%,
+            rgba(255, 255, 255, 0.05),
+            transparent 20%
+          ),
           linear-gradient(155deg, #05070d 0%, var(--bg) 55%, #140d15 100%);
         color: #f4ecdf;
-        font-family: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Georgia, serif;
+        font-family:
+          "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Georgia, serif;
         overflow: hidden;
       }
 
@@ -50,7 +55,11 @@
         top: -8rem;
         right: -6rem;
         border-radius: 50%;
-        background: radial-gradient(circle, rgba(255, 208, 137, 0.08), transparent 70%);
+        background: radial-gradient(
+          circle,
+          rgba(255, 208, 137, 0.08),
+          transparent 70%
+        );
         filter: blur(12px);
       }
 
@@ -60,7 +69,11 @@
         bottom: -6rem;
         left: -5rem;
         border-radius: 50%;
-        background: radial-gradient(circle, rgba(149, 242, 255, 0.08), transparent 72%);
+        background: radial-gradient(
+          circle,
+          rgba(149, 242, 255, 0.08),
+          transparent 72%
+        );
         filter: blur(10px);
       }
 
@@ -72,7 +85,9 @@
         background-image:
           linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
           linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
-        background-size: 4px 4px, 6px 6px;
+        background-size:
+          4px 4px,
+          6px 6px;
       }
 
       .layout {
@@ -85,7 +100,11 @@
 
       .panel {
         padding: 1.2rem;
-        background: linear-gradient(180deg, rgba(7, 10, 18, 0.92), var(--panel));
+        background: linear-gradient(
+          180deg,
+          rgba(7, 10, 18, 0.92),
+          var(--panel)
+        );
         border-right: 1px solid rgba(255, 255, 255, 0.08);
         display: grid;
         align-content: start;
@@ -97,7 +116,8 @@
       button,
       a,
       .legend {
-        font-family: "IBM Plex Mono", "Cascadia Code", "Fira Code", Consolas, monospace;
+        font-family:
+          "IBM Plex Mono", "Cascadia Code", "Fira Code", Consolas, monospace;
       }
 
       .micro {
@@ -136,7 +156,10 @@
         text-decoration: none;
         background: rgba(255, 255, 255, 0.04);
         cursor: pointer;
-        transition: transform 180ms ease, background 180ms ease, border-color 180ms ease;
+        transition:
+          transform 180ms ease,
+          background 180ms ease,
+          border-color 180ms ease;
       }
 
       button:hover,
@@ -161,7 +184,8 @@
       }
 
       details.sliders-section summary {
-        font-family: "IBM Plex Mono", "Cascadia Code", "Fira Code", Consolas, monospace;
+        font-family:
+          "IBM Plex Mono", "Cascadia Code", "Fira Code", Consolas, monospace;
         font-size: 0.72rem;
         text-transform: uppercase;
         letter-spacing: 0.16em;
@@ -200,7 +224,8 @@
         border-radius: 999px;
         padding: 0.6rem 1rem;
         color: inherit;
-        font-family: "IBM Plex Mono", "Cascadia Code", "Fira Code", Consolas, monospace;
+        font-family:
+          "IBM Plex Mono", "Cascadia Code", "Fira Code", Consolas, monospace;
         font-size: 0.76rem;
         text-transform: uppercase;
         letter-spacing: 0.08em;
@@ -220,7 +245,8 @@
       }
 
       .slider-group label {
-        font-family: "IBM Plex Mono", "Cascadia Code", "Fira Code", Consolas, monospace;
+        font-family:
+          "IBM Plex Mono", "Cascadia Code", "Fira Code", Consolas, monospace;
         font-size: 0.76rem;
         text-transform: uppercase;
         letter-spacing: 0.08em;
@@ -261,7 +287,9 @@
         border: 2px solid var(--bg);
         cursor: pointer;
         box-shadow: 0 0 10px var(--line);
-        transition: transform 150ms ease, background 150ms ease;
+        transition:
+          transform 150ms ease,
+          background 150ms ease;
       }
 
       .slider-group input[type="range"]::-webkit-slider-thumb:hover {
@@ -279,7 +307,9 @@
         border: 2px solid var(--bg);
         cursor: pointer;
         box-shadow: 0 0 10px var(--line);
-        transition: transform 150ms ease, background 150ms ease;
+        transition:
+          transform 150ms ease,
+          background 150ms ease;
       }
 
       .slider-group input[type="range"]::-moz-range-thumb:hover {
@@ -311,7 +341,8 @@
       }
 
       .color-picker-wrapper label {
-        font-family: "IBM Plex Mono", "Cascadia Code", "Fira Code", Consolas, monospace;
+        font-family:
+          "IBM Plex Mono", "Cascadia Code", "Fira Code", Consolas, monospace;
         font-size: 0.65rem;
         text-transform: uppercase;
         letter-spacing: 0.08em;
@@ -328,7 +359,9 @@
         cursor: pointer;
         background: none;
         padding: 0;
-        transition: transform 150ms ease, border-color 150ms ease;
+        transition:
+          transform 150ms ease,
+          border-color 150ms ease;
       }
 
       .color-picker-wrapper input[type="color"]::-webkit-color-swatch-wrapper {
@@ -376,6 +409,45 @@
         text-align: right;
       }
 
+      .manifest-list div.clickable-manifest-row {
+        cursor: pointer;
+        position: relative;
+        transition:
+          border-color 200ms ease,
+          background 200ms ease,
+          box-shadow 200ms ease;
+      }
+
+      .manifest-list div.clickable-manifest-row:hover,
+      .manifest-list div.clickable-manifest-row:focus-visible {
+        border-color: var(--accent);
+        background: rgba(255, 255, 255, 0.08);
+        box-shadow: 0 0 10px rgba(0, 255, 255, 0.15);
+        outline: none;
+      }
+
+      .manifest-list div.clickable-manifest-row.is-void-active {
+        border-color: var(--accent);
+        background: rgba(138, 43, 226, 0.15);
+        box-shadow: 0 0 12px rgba(138, 43, 226, 0.25);
+      }
+
+      .manifest-list div.clickable-manifest-row.is-void-active dd {
+        color: var(--accent);
+        text-shadow: 0 0 8px var(--accent);
+        font-weight: bold;
+      }
+
+      body.is-void .frame {
+        background:
+          radial-gradient(
+            circle at 50% 38%,
+            rgba(138, 43, 226, 0.12),
+            transparent 44%
+          ),
+          rgba(2, 2, 6, 0.85);
+      }
+
       .viewport {
         position: relative;
         min-height: 100vh;
@@ -390,7 +462,11 @@
         border-radius: 1.8rem;
         border: 1px solid rgba(255, 255, 255, 0.08);
         background:
-          radial-gradient(circle at 50% 38%, rgba(255, 255, 255, 0.08), transparent 44%),
+          radial-gradient(
+            circle at 50% 38%,
+            rgba(255, 255, 255, 0.08),
+            transparent 44%
+          ),
           rgba(3, 5, 10, 0.55);
         box-shadow: 0 24px 80px rgba(0, 0, 0, 0.42);
         overflow: hidden;
@@ -442,9 +518,15 @@
       }
 
       @keyframes phaseCross {
-        0% { opacity: 1; }
-        35% { opacity: 0.55; }
-        100% { opacity: 1; }
+        0% {
+          opacity: 1;
+        }
+        35% {
+          opacity: 0.55;
+        }
+        100% {
+          opacity: 1;
+        }
       }
 
       .is-crossing .frame {
@@ -483,7 +565,8 @@
         <div class="micro">Threshold Observatory</div>
         <h1 id="observatory-title">The room, from farther away.</h1>
         <p id="observatory-copy">
-          Legacy query parameters still work here, but the sigil now uses the same seeded ritual engine as the room itself.
+          Legacy query parameters still work here, but the sigil now uses the
+          same seeded ritual engine as the room itself.
         </p>
         <div class="controls">
           <button id="phase-button" type="button">Advance phase</button>
@@ -491,12 +574,16 @@
           <button id="manifest-button" type="button">Toggle manifest</button>
           <button id="audio-button" type="button">Resonate (Audio off)</button>
           <a id="room-link" href="../index.html">Return to the room</a>
-          <a id="memory-link" href="../forgotten.html">Enter the memory chamber</a>
+          <a id="memory-link" href="../forgotten.html"
+            >Enter the memory chamber</a
+          >
         </div>
         <details class="sliders-section" open>
           <summary>Adjust Geometry</summary>
           <div class="slider-group">
-            <label for="select-mode">Render Mode <span id="val-mode">orbital</span></label>
+            <label for="select-mode"
+              >Render Mode <span id="val-mode">orbital</span></label
+            >
             <select id="select-mode">
               <option value="orbital">orbital</option>
               <option value="constellation">constellation</option>
@@ -504,33 +591,69 @@
             </select>
           </div>
           <div class="slider-group">
-            <label for="slider-iterations">Iterations <span id="val-iterations">128</span></label>
-            <input type="range" id="slider-iterations" min="24" max="720" value="128" step="1">
+            <label for="slider-iterations"
+              >Iterations <span id="val-iterations">128</span></label
+            >
+            <input
+              type="range"
+              id="slider-iterations"
+              min="24"
+              max="720"
+              value="128"
+              step="1"
+            />
           </div>
           <div class="slider-group">
-            <label for="slider-orbit">Orbit Radius <span id="val-orbit">0.50</span></label>
-            <input type="range" id="slider-orbit" min="0" max="1" value="0.5" step="0.01">
+            <label for="slider-orbit"
+              >Orbit Radius <span id="val-orbit">0.50</span></label
+            >
+            <input
+              type="range"
+              id="slider-orbit"
+              min="0"
+              max="1"
+              value="0.5"
+              step="0.01"
+            />
           </div>
           <div class="slider-group">
-            <label for="slider-noise">Noise <span id="val-noise">0.50</span></label>
-            <input type="range" id="slider-noise" min="0" max="1" value="0.5" step="0.01">
+            <label for="slider-noise"
+              >Noise <span id="val-noise">0.50</span></label
+            >
+            <input
+              type="range"
+              id="slider-noise"
+              min="0"
+              max="1"
+              value="0.5"
+              step="0.01"
+            />
           </div>
           <div class="slider-group">
-            <label for="slider-speed">Speed <span id="val-speed">1.00</span></label>
-            <input type="range" id="slider-speed" min="0" max="3" value="1" step="0.05">
+            <label for="slider-speed"
+              >Speed <span id="val-speed">1.00</span></label
+            >
+            <input
+              type="range"
+              id="slider-speed"
+              min="0"
+              max="3"
+              value="1"
+              step="0.05"
+            />
           </div>
           <div class="color-group">
             <div class="color-picker-wrapper">
               <label for="color-bg">Background</label>
-              <input type="color" id="color-bg" value="#0b1020">
+              <input type="color" id="color-bg" value="#0b1020" />
             </div>
             <div class="color-picker-wrapper">
               <label for="color-line">Line</label>
-              <input type="color" id="color-line" value="#95f2ff">
+              <input type="color" id="color-line" value="#95f2ff" />
             </div>
             <div class="color-picker-wrapper">
               <label for="color-accent">Accent</label>
-              <input type="color" id="color-accent" value="#ffd089">
+              <input type="color" id="color-accent" value="#ffd089" />
             </div>
           </div>
         </details>
@@ -561,20 +684,58 @@
         }
         recordVisit("observatory");
 
+        function hasVisitedAll() {
+          try {
+            const visited = JSON.parse(
+              localStorage.getItem(VISITED_KEY) || "[]",
+            );
+            return (
+              Array.isArray(visited) &&
+              visited.includes("room") &&
+              visited.includes("observatory") &&
+              visited.includes("memory")
+            );
+          } catch (e) {
+            return false;
+          }
+        }
+
         const search = new URLSearchParams(window.location.search);
         const reduceMotion =
           window.matchMedia &&
           window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
+        const voidActive =
+          search.get("void") === "true" || search.get("mode") === "void";
+        const queryMode = search.get("mode");
+        const parsedMode = ["orbital", "constellation", "spiral", "void"].includes(
+          queryMode,
+        )
+          ? queryMode
+          : undefined;
         const overrides = {
           background: Engine.parseColor(search.get("background"), null),
           line: Engine.parseColor(search.get("line"), null),
           accent: Engine.parseColor(search.get("accent"), null),
-          iterations: Engine.parseNumber(search.get("iterations"), undefined, { min: 24, max: 720 }),
-          orbitRadius: Engine.parseNumber(search.get("orbitRadius"), undefined, { min: 0, max: 1 }),
-          noise: Engine.parseNumber(search.get("noise"), undefined, { min: 0, max: 1 }),
-          speed: Engine.parseNumber(search.get("speed"), undefined, { min: 0, max: 3 }),
-          mode: ["orbital", "constellation", "spiral"].includes(search.get("mode")) ? search.get("mode") : undefined,
+          iterations: Engine.parseNumber(search.get("iterations"), undefined, {
+            min: 24,
+            max: 720,
+          }),
+          orbitRadius: Engine.parseNumber(
+            search.get("orbitRadius"),
+            undefined,
+            { min: 0, max: 1 },
+          ),
+          noise: Engine.parseNumber(search.get("noise"), undefined, {
+            min: 0,
+            max: 1,
+          }),
+          speed: Engine.parseNumber(search.get("speed"), undefined, {
+            min: 0,
+            max: 3,
+          }),
+          mode: parsedMode || (voidActive ? "void" : undefined),
+          void: voidActive ? true : undefined,
         };
 
         Object.keys(overrides).forEach((key) => {
@@ -584,7 +745,8 @@
         });
 
         const state = {
-          seed: Engine.sanitizeSeed(search.get("seed")) || Engine.generateSeed(),
+          seed:
+            Engine.sanitizeSeed(search.get("seed")) || Engine.generateSeed(),
           phase: Engine.parsePhase(search.get("phase")),
           persistSeed: search.has("seed"),
           overrides,
@@ -619,7 +781,11 @@
         });
 
         function updateTheme() {
-          const palette = Engine.derivePalette(state.seed, state.phase, state.overrides);
+          const palette = Engine.derivePalette(
+            state.seed,
+            state.phase,
+            state.overrides,
+          );
           document.body.style.setProperty("--bg", palette.background);
           document.body.style.setProperty("--line", palette.line);
           document.body.style.setProperty("--accent", palette.accent);
@@ -627,16 +793,29 @@
         }
 
         function renderManifest() {
+          const isTriad = hasVisitedAll() ? "threefold" : "incomplete";
           const rows = state.manifestEntries.concat([
             { key: "seed", value: state.seed },
             { key: "phase", value: state.phase },
             { key: "mode", value: renderer.getState().config.mode },
             { key: "iterations", value: renderer.getState().config.iterations },
-            { key: "noise", value: renderer.getState().config.noise.toFixed(2) },
+            {
+              key: "noise",
+              value: renderer.getState().config.noise.toFixed(2),
+            },
+            { key: "corridors", value: isTriad },
           ]);
 
           manifestList.innerHTML = rows
-            .map((row) => `<div><dt>${row.key}</dt><dd>${row.value}</dd></div>`)
+            .map((row) => {
+              if (row.key === "corridors" && hasVisitedAll()) {
+                const activeClass = state.overrides.void
+                  ? "is-void-active"
+                  : "";
+                return `<div class="manifest-row clickable-manifest-row ${activeClass}" id="manifest-toggle-void" role="button" tabindex="0" title="Click to toggle Void Resonance"><dt>${row.key}</dt><dd>${row.value}</dd></div>`;
+              }
+              return `<div><dt>${row.key}</dt><dd>${row.value}</dd></div>`;
+            })
             .join("");
         }
 
@@ -648,7 +827,21 @@
           } else {
             next.searchParams.delete("seed");
           }
-          const overrideKeys = ["background", "line", "accent", "iterations", "orbitRadius", "noise", "speed", "mode"];
+          if (state.overrides.void) {
+            next.searchParams.set("void", "true");
+          } else {
+            next.searchParams.delete("void");
+          }
+          const overrideKeys = [
+            "background",
+            "line",
+            "accent",
+            "iterations",
+            "orbitRadius",
+            "noise",
+            "speed",
+            "mode",
+          ];
           overrideKeys.forEach((key) => {
             const val = state.overrides[key];
             if (val !== null && val !== undefined) {
@@ -657,7 +850,11 @@
               next.searchParams.delete(key);
             }
           });
-          window.history.replaceState({}, "", `${next.pathname}${next.search}${next.hash}`);
+          window.history.replaceState(
+            {},
+            "",
+            `${next.pathname}${next.search}${next.hash}`,
+          );
         }
 
         function renderCopy() {
@@ -668,7 +865,9 @@
           const nextPhase = Engine.nextPhase(state.phase);
           phaseButton.textContent = `Advance to ${nextPhase} (P)`;
           reseedButton.textContent = "Reseed (R)";
-          manifestButton.textContent = state.manifestOpen ? "Hide manifest (M)" : "Show manifest (M)";
+          manifestButton.textContent = state.manifestOpen
+            ? "Hide manifest (M)"
+            : "Show manifest (M)";
           legend.innerHTML = [
             `<span class="legend-seed">${state.seed}</span>`,
             `<span class="legend-sep">::</span>`,
@@ -687,10 +886,14 @@
         }
 
         function updateNavigation() {
-          const query = new URLSearchParams({
+          const params = {
             seed: state.seed,
             phase: state.phase,
-          }).toString();
+          };
+          if (state.overrides.void) {
+            params.void = "true";
+          }
+          const query = new URLSearchParams(params).toString();
           roomLink.href = `../index.html?${query}`;
           memoryLink.href = `../forgotten.html?${query}`;
         }
@@ -698,16 +901,22 @@
         function syncAudioUI() {
           if (!audioButton) return;
           const active = audio && audio.isActive();
-          audioButton.textContent = active ? "Resonate (A — on)" : "Resonate (A — off)";
+          audioButton.textContent = active
+            ? "Resonate (A — on)"
+            : "Resonate (A — off)";
           if (active) {
             audioButton.classList.add("is-resonating");
           } else {
             audioButton.classList.remove("is-resonating");
           }
-          audioGlow.sync();
         }
 
         function applyState() {
+          if (state.overrides.void) {
+            document.body.classList.add("is-void");
+          } else {
+            document.body.classList.remove("is-void");
+          }
           updateTheme();
           renderer.setState({
             seed: state.seed,
@@ -722,8 +931,13 @@
           updateSliders();
           manifestList.hidden = !state.manifestOpen;
           syncAudioUI();
-          if (audio && audio.isActive()) {
+          if (audio) {
+            if (typeof audio.setVoidMode === "function") {
+              audio.setVoidMode(state.overrides.void === true);
+            }
             audio.setSeed(state.seed);
+          }
+          if (audio && audio.isActive()) {
             audio.setPointer(0.5, 0.5, state.phase);
           }
         }
@@ -776,7 +990,20 @@
 
           const updateOverride = (key, val) => {
             state.overrides[key] = val;
-            
+            if (key === "mode") {
+              if (val === "void") {
+                state.overrides.void = true;
+              } else if (state.overrides.void) {
+                delete state.overrides.void;
+              }
+            }
+            if (state.overrides.void) {
+              document.body.classList.add("is-void");
+            } else {
+              document.body.classList.remove("is-void");
+            }
+            updateTheme();
+
             renderer.setState({
               seed: state.seed,
               phase: state.phase,
@@ -793,11 +1020,14 @@
               iterations: "val-iterations",
               orbitRadius: "val-orbit",
               noise: "val-noise",
-              speed: "val-speed"
+              speed: "val-speed",
             }[key];
             const displayEl = document.getElementById(displayId);
             if (displayEl) {
-              displayEl.textContent = typeof val === "number" && key !== "iterations" ? val.toFixed(2) : val;
+              displayEl.textContent =
+                typeof val === "number" && key !== "iterations"
+                  ? val.toFixed(2)
+                  : val;
             }
           };
 
@@ -850,7 +1080,10 @@
           document.body.classList.add("is-crossing");
           state.phase = Engine.nextPhase(state.phase);
           applyState();
-          window.setTimeout(() => document.body.classList.remove("is-crossing"), 450);
+          window.setTimeout(
+            () => document.body.classList.remove("is-crossing"),
+            450,
+          );
         }
 
         phaseButton.addEventListener("click", cyclePhase);
@@ -861,7 +1094,9 @@
         manifestButton.addEventListener("click", () => {
           state.manifestOpen = !state.manifestOpen;
           manifestList.hidden = !state.manifestOpen;
-          manifestButton.textContent = state.manifestOpen ? "Hide manifest (M)" : "Show manifest (M)";
+          manifestButton.textContent = state.manifestOpen
+            ? "Hide manifest (M)"
+            : "Show manifest (M)";
         });
 
         canvas.addEventListener("click", cyclePhase);
@@ -895,8 +1130,15 @@
         });
 
         window.addEventListener("keydown", (event) => {
-          if (event.defaultPrevented || event.metaKey || event.ctrlKey || event.altKey) return;
-          const key = typeof event.key === "string" ? event.key.toLowerCase() : "";
+          if (
+            event.defaultPrevented ||
+            event.metaKey ||
+            event.ctrlKey ||
+            event.altKey
+          )
+            return;
+          const key =
+            typeof event.key === "string" ? event.key.toLowerCase() : "";
           if (key === "r") {
             event.preventDefault();
             state.seed = Engine.generateSeed();
@@ -920,14 +1162,70 @@
             event.preventDefault();
             state.manifestOpen = !state.manifestOpen;
             manifestList.hidden = !state.manifestOpen;
-            manifestButton.textContent = state.manifestOpen ? "Hide manifest (M)" : "Show manifest (M)";
+            manifestButton.textContent = state.manifestOpen
+              ? "Hide manifest (M)"
+              : "Show manifest (M)";
           }
         });
+
+        function updateAudioGlow() {
+          if (audio && audio.isActive()) {
+            const metrics = audio.getMetrics();
+            const pulse = 1.0 + metrics.lfoPhase * 0.12;
+            const envelope = 1.0 + (metrics.filterEnvelope - 0.5) * 0.08;
+            document.body.style.setProperty(
+              "--audio-bloom-glow",
+              `${pulse * envelope}`,
+            );
+          } else {
+            document.body.style.setProperty("--audio-bloom-glow", "1.0");
+          }
+          requestAnimationFrame(updateAudioGlow);
+        }
+        requestAnimationFrame(updateAudioGlow);
 
         const slidersSection = document.querySelector(".sliders-section");
         if (slidersSection) {
           slidersSection.open = window.innerWidth > 960;
         }
+
+        if (hasVisitedAll()) {
+          const selectModeEl = document.getElementById("select-mode");
+          if (selectModeEl) {
+            const opt = document.createElement("option");
+            opt.value = "void";
+            opt.textContent = "void (unlocked)";
+            selectModeEl.appendChild(opt);
+          }
+        }
+
+        function toggleVoidResonance() {
+          if (state.overrides.void) {
+            delete state.overrides.void;
+            if (state.overrides.mode === "void") {
+              state.overrides.mode = "orbital";
+            }
+          } else {
+            state.overrides.void = true;
+            state.overrides.mode = "void";
+          }
+          applyState();
+        }
+
+        manifestList.addEventListener("click", (event) => {
+          const toggle = event.target.closest("#manifest-toggle-void");
+          if (toggle) {
+            toggleVoidResonance();
+          }
+        });
+
+        manifestList.addEventListener("keydown", (event) => {
+          const toggle = event.target.closest("#manifest-toggle-void");
+          if (toggle && (event.key === "Enter" || event.key === " ")) {
+            event.preventDefault();
+            toggleVoidResonance();
+          }
+        });
 
         setupSliderListeners();
         applyState();

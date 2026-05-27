@@ -427,10 +427,29 @@
   function derivePalette(seed, phase, overrides) {
     const cleanSeed = sanitizeSeed(seed) || "threshold";
     const activePhase = parsePhase(phase);
+    const safeOverrides = overrides || {};
+
+    if (safeOverrides.void) {
+      const voidBg = parseColor(safeOverrides.background, "#020206");
+      const voidLine = parseColor(safeOverrides.line, "#8a2be2");
+      const voidAccent = parseColor(safeOverrides.accent, "#00ffff");
+      return {
+        name: "void",
+        background: voidBg,
+        line: voidLine,
+        accent: voidAccent,
+        glow: "#1a0033",
+        mist: "rgba(138, 43, 226, 0.12)",
+        panel: "rgba(2, 2, 6, 0.85)",
+        halo: "rgba(0, 255, 255, 0.15)",
+        lineSoft: toRgba(voidLine, 0.18),
+        accentSoft: toRgba(voidAccent, 0.22),
+      };
+    }
+
     const family =
       PALETTE_FAMILIES[hashString(cleanSeed) % PALETTE_FAMILIES.length];
     const base = family[activePhase];
-    const safeOverrides = overrides || {};
 
     return {
       name: family.name,
@@ -467,9 +486,12 @@
     const activePhase = parsePhase(phase);
     const safeVariant = Number.isFinite(Number(variant)) ? Number(variant) : 0;
     const rng = rngFrom(`${cleanSeed}:${activePhase}:verse:${safeVariant}`);
-    const opening = VERSE_LIBRARY.openings[Math.floor(rng() * VERSE_LIBRARY.openings.length)];
-    const middle = VERSE_LIBRARY.middles[Math.floor(rng() * VERSE_LIBRARY.middles.length)];
-    const ending = VERSE_LIBRARY.endings[Math.floor(rng() * VERSE_LIBRARY.endings.length)];
+    const opening =
+      VERSE_LIBRARY.openings[Math.floor(rng() * VERSE_LIBRARY.openings.length)];
+    const middle =
+      VERSE_LIBRARY.middles[Math.floor(rng() * VERSE_LIBRARY.middles.length)];
+    const ending =
+      VERSE_LIBRARY.endings[Math.floor(rng() * VERSE_LIBRARY.endings.length)];
 
     return `${opening} ${middle}, ${ending}`;
   }
@@ -489,9 +511,12 @@
     const baseNoise = 0.22 + rng() * 0.36;
     const baseSpeed = 0.35 + rng() * 0.32 + phaseIndex * 0.08;
 
-    const MODES = ["orbital", "constellation", "spiral"];
-    const defaultMode = MODES[hashString(cleanSeed) % MODES.length];
-    const mode = overrides.mode && MODES.includes(overrides.mode) ? overrides.mode : defaultMode;
+    const MODES = ["orbital", "constellation", "spiral", "void"];
+    const defaultMode = MODES[hashString(cleanSeed) % (MODES.length - 1)];
+    const mode =
+      overrides.mode && MODES.includes(overrides.mode)
+        ? overrides.mode
+        : defaultMode;
 
     return {
       seed: cleanSeed,
@@ -605,7 +630,8 @@
 
       const isSpiral = config.mode === "spiral";
       for (let index = 0; index < config.iterations; index += 1) {
-        const theta = (index / config.iterations) * TAU * (isSpiral ? 3.0 : 1.0);
+        const theta =
+          (index / config.iterations) * TAU * (isSpiral ? 3.0 : 1.0);
         const baseRadius = isSpiral
           ? 0.05 + (index / config.iterations) * (config.orbitRadius * 0.9)
           : config.orbitRadius;
@@ -696,8 +722,10 @@
         audioNoiseMod = 1.0 + (metrics.filterEnvelope - 0.5) * 0.08;
       }
 
-      const pulse = timestamp * 0.001 * Math.max(0.12, config.speed * audioSpeedMod);
-      const scale = Math.min(width, height) * (state.reducedMotion ? 0.31 : 0.36);
+      const pulse =
+        timestamp * 0.001 * Math.max(0.12, config.speed * audioSpeedMod);
+      const scale =
+        Math.min(width, height) * (state.reducedMotion ? 0.31 : 0.36);
       const pointerAttract = pointer.active ? 0.12 : 0.05;
 
       pointerEase.x += (pointer.x - pointerEase.x) * 0.08;
@@ -732,7 +760,8 @@
         const pointerX = (pointerEase.x - 0.5) * width * 0.42;
         const pointerY = (pointerEase.y - 0.5) * height * 0.32;
         const distance = Math.hypot(pointerX - x, pointerY - y);
-        const influence = Math.max(0, 1 - distance / (scale * 1.1)) * pointerAttract;
+        const influence =
+          Math.max(0, 1 - distance / (scale * 1.1)) * pointerAttract;
 
         x += (pointerX - x) * influence * dot.weight;
         y += (pointerY - y) * influence * dot.weight;
@@ -750,7 +779,10 @@
           context.beginPath();
           context.moveTo(p1.x, p1.y);
           context.lineTo(p2.x, p2.y);
-          context.strokeStyle = toRgba(config.palette.line, 0.28 + p1.dot.weight * 0.05);
+          context.strokeStyle = toRgba(
+            config.palette.line,
+            0.28 + p1.dot.weight * 0.05,
+          );
           context.lineWidth = 0.8;
           context.stroke();
 
@@ -789,6 +821,25 @@
           context.lineWidth = 0.5;
           context.stroke();
         }
+      } else if (config.mode === "void") {
+        for (let i = 0; i < points.length; i++) {
+          const p = points[i];
+          context.beginPath();
+          context.moveTo(p.x, p.y);
+          const midX = p.x * 0.5;
+          const midY = p.y * 0.5;
+          const perpX = -p.y * 0.15;
+          const perpY = p.x * 0.15;
+          const controlX = midX + perpX + (pointerEase.x - 0.5) * 15;
+          const controlY = midY + perpY + (pointerEase.y - 0.5) * 15;
+          context.quadraticCurveTo(controlX, controlY, 0, 0);
+          context.strokeStyle = toRgba(
+            config.palette.line,
+            0.18 + p.dot.weight * 0.04,
+          );
+          context.lineWidth = 0.5 + p.dot.weight * 0.15;
+          context.stroke();
+        }
       } else {
         // orbital (default)
         for (let i = 0; i < points.length; i++) {
@@ -798,7 +849,8 @@
           const innerX = Math.cos(innerAngle) * innerRadius;
           const innerY = Math.sin(innerAngle) * innerRadius;
           const bendX = (innerX + p.x) / 2 + Math.sin(pulse + p.dot.drift) * 10;
-          const bendY = (innerY + p.y) / 2 + Math.cos(pulse * 0.8 + p.dot.drift) * 10;
+          const bendY =
+            (innerY + p.y) / 2 + Math.cos(pulse * 0.8 + p.dot.drift) * 10;
 
           context.beginPath();
           context.moveTo(innerX, innerY);
@@ -807,7 +859,8 @@
             p.dot.band === 0
               ? toRgba(config.palette.accent, 0.62)
               : toRgba(config.palette.line, 0.42 + p.dot.weight * 0.08);
-          context.lineWidth = p.dot.band === 0 ? 1.7 : 0.9 + p.dot.weight * 0.35;
+          context.lineWidth =
+            p.dot.band === 0 ? 1.7 : 0.9 + p.dot.weight * 0.35;
           context.stroke();
         }
       }
@@ -824,16 +877,31 @@
         context.fill();
       }
 
-      context.beginPath();
-      context.arc(0, 0, scale * 0.18, 0, TAU);
-      context.fillStyle = toRgba(config.palette.accent, 0.12);
-      context.fill();
+      if (config.mode === "void") {
+        context.beginPath();
+        context.arc(0, 0, scale * 0.28, 0, TAU);
+        context.fillStyle = config.palette.background;
+        context.fill();
 
-      context.beginPath();
-      context.arc(0, 0, scale * 0.12, 0, TAU);
-      context.strokeStyle = toRgba(config.palette.line, 0.48);
-      context.lineWidth = 1.4;
-      context.stroke();
+        for (let r = 1; r <= 4; r++) {
+          context.beginPath();
+          context.arc(0, 0, scale * (0.28 + r * 0.015), 0, TAU);
+          context.strokeStyle = toRgba(config.palette.accent, 0.3 / r);
+          context.lineWidth = 1.6;
+          context.stroke();
+        }
+      } else {
+        context.beginPath();
+        context.arc(0, 0, scale * 0.18, 0, TAU);
+        context.fillStyle = toRgba(config.palette.accent, 0.12);
+        context.fill();
+
+        context.beginPath();
+        context.arc(0, 0, scale * 0.12, 0, TAU);
+        context.strokeStyle = toRgba(config.palette.line, 0.48);
+        context.lineWidth = 1.4;
+        context.stroke();
+      }
 
       context.restore();
 
@@ -914,10 +982,13 @@
     let lfoPhaseOffset = 0;
     let filterEnvelopeValue = 0.5;
     let pendingSeed = null;
+    let isVoidModeActive = false;
+    let lastSeed = "threshold";
 
     function init() {
       if (ctx) return;
-      const AudioContextClass = global.AudioContext || global.webkitAudioContext;
+      const AudioContextClass =
+        global.AudioContext || global.webkitAudioContext;
       if (!AudioContextClass) return;
 
       ctx = new AudioContextClass();
@@ -990,7 +1061,11 @@
 
       const baseFreq = osc1.frequency.value;
       const detuneAmount = (x - 0.5) * (baseFreq * 0.08);
-      osc2.frequency.setTargetAtTime(baseFreq + detuneAmount, ctx.currentTime, 0.3);
+      osc2.frequency.setTargetAtTime(
+        baseFreq + detuneAmount,
+        ctx.currentTime,
+        0.3,
+      );
 
       let volume = 0.08;
       if (phase === "approach") volume = 0.06;
@@ -1001,28 +1076,45 @@
 
     function applySeedToNodes(seed) {
       const hash = hashString(seed || "threshold");
-      const baseNotes = [41.20, 43.65, 49.00, 55.00, 65.41];
-      const rootNote = baseNotes[hash % baseNotes.length];
+      const baseNotes = [41.2, 43.65, 49.0, 55.0, 65.41];
+      let rootNote = baseNotes[hash % baseNotes.length];
+      if (isVoidModeActive) {
+        rootNote = rootNote * 0.5;
+      }
       osc1.frequency.setTargetAtTime(rootNote, ctx.currentTime, 0.8);
-      osc2.frequency.setTargetAtTime(rootNote * 1.006, ctx.currentTime, 0.8);
+      osc2.frequency.setTargetAtTime(
+        rootNote * (isVoidModeActive ? 1.003 : 1.006),
+        ctx.currentTime,
+        0.8,
+      );
     }
 
     function setSeed(seed) {
+      lastSeed = seed || "threshold";
       // Always pre-warm pitch regardless of active state
       if (!ctx) {
         // Store for when init() is called
-        pendingSeed = seed || "threshold";
+        pendingSeed = lastSeed;
         return;
       }
       if (!osc1 || !osc2) return;
-      applySeedToNodes(seed);
+      applySeedToNodes(lastSeed);
+    }
+
+    function setVoidMode(enabled) {
+      isVoidModeActive = !!enabled;
+      if (ctx && (osc1 || osc2)) {
+        applySeedToNodes(lastSeed);
+      }
     }
 
     // Returns live metrics for audio-visual coupling
     function getMetrics() {
       if (!ctx) return { lfoPhase: 0, filterEnvelope: 0.5, active: false };
       // Approximate LFO phase from currentTime — 0.18Hz period = ~5.56s
-      const lfoPhase = Math.sin(ctx.currentTime * 2 * Math.PI * 0.18 + lfoPhaseOffset);
+      const lfoPhase = Math.sin(
+        ctx.currentTime * 2 * Math.PI * 0.18 + lfoPhaseOffset,
+      );
       return {
         lfoPhase,
         filterEnvelope: filterEnvelopeValue,
@@ -1037,6 +1129,7 @@
       },
       setPointer,
       setSeed,
+      setVoidMode,
       getMetrics,
       isActive: function () {
         return active;
