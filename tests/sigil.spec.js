@@ -42,7 +42,10 @@ function summonStaticServer() {
         }
 
         const ext = path.extname(absolute).toLowerCase();
-        response.setHeader("Content-Type", mimeByExtension[ext] || "application/octet-stream");
+        response.setHeader(
+          "Content-Type",
+          mimeByExtension[ext] || "application/octet-stream",
+        );
         fs.createReadStream(absolute).pipe(response);
       });
     });
@@ -65,12 +68,17 @@ test.describe("threshold room", () => {
     await new Promise((resolve) => listening.server.close(resolve));
   });
 
-  test("renders the room and keyboard shortcuts stay active", async ({ page }) => {
+  test("renders the room and keyboard shortcuts stay active", async ({
+    page,
+  }) => {
     const url = `http://localhost:${listening.port}/index.html?seed=door-salt&phase=approach`;
     await page.goto(url);
 
     await expect(page.locator("[data-testid='room-canvas']")).toBeVisible();
-    await expect(page.locator("body")).toHaveAttribute("data-phase", "approach");
+    await expect(page.locator("body")).toHaveAttribute(
+      "data-phase",
+      "approach",
+    );
 
     const title = page.locator("[data-testid='room-title']");
     const firstTitle = await title.textContent();
@@ -79,9 +87,18 @@ test.describe("threshold room", () => {
     await page.locator("#phase-button").click();
     await expect(page.locator("body")).toHaveAttribute("data-phase", "listen");
     await expect(title).not.toHaveText(firstTitle || "");
-    await expect(page.locator("#observatory-link")).toHaveAttribute("href", /seed=door-salt/);
-    await expect(page.locator("#observatory-link")).toHaveAttribute("href", /phase=listen/);
-    await expect(page.locator("#memory-link")).toHaveAttribute("href", /seed=door-salt/);
+    await expect(page.locator("#observatory-link")).toHaveAttribute(
+      "href",
+      /seed=door-salt/,
+    );
+    await expect(page.locator("#observatory-link")).toHaveAttribute(
+      "href",
+      /phase=listen/,
+    );
+    await expect(page.locator("#memory-link")).toHaveAttribute(
+      "href",
+      /seed=door-salt/,
+    );
 
     const panel = page.locator("[data-testid='manifest-panel']");
     const before = await panel.getAttribute("data-open");
@@ -95,7 +112,9 @@ test.describe("threshold room", () => {
     await expect(page.locator("#seed-value")).not.toHaveText(firstSeed || "");
   });
 
-  test("soft secret can be dismissed without blocking the room", async ({ page }) => {
+  test("soft secret can be dismissed without blocking the room", async ({
+    page,
+  }) => {
     const url = `http://localhost:${listening.port}/index.html?seed=door-salt&phase=approach`;
     await page.goto(url);
 
@@ -123,8 +142,12 @@ test.describe("threshold room", () => {
     await page.goto(url);
 
     await page.locator("#capture-button").click();
-    await expect(page.locator("#echo-list button[data-echo-index='0']")).toContainText("first-echo");
-    await expect(page.locator("#echo-list button[data-echo-index='0']")).toContainText("approach");
+    await expect(
+      page.locator("#echo-list button[data-echo-index='0']"),
+    ).toContainText("first-echo");
+    await expect(
+      page.locator("#echo-list button[data-echo-index='0']"),
+    ).toContainText("approach");
 
     await page.keyboard.press("KeyR");
     const newSeed = await page.locator("#seed-value").textContent();
@@ -142,14 +165,17 @@ test.describe("threshold room", () => {
     await page.goto(url);
 
     await page.locator("#capture-button").click();
-    await expect(page.locator("#echo-list button[data-echo-index='0']")).toBeVisible();
+    await expect(
+      page.locator("#echo-list button[data-echo-index='0']"),
+    ).toBeVisible();
 
     await page.locator("#clear-echoes-button").click();
     await expect(page.locator("#echo-list")).toContainText("No echoes yet");
   });
 
-
-  test("same seed and phase produce the same text fragments", async ({ page }) => {
+  test("same seed and phase produce the same text fragments", async ({
+    page,
+  }) => {
     const url = `http://localhost:${listening.port}/index.html?seed=ashen-window&phase=cross`;
 
     await page.goto(url);
@@ -159,7 +185,9 @@ test.describe("threshold room", () => {
       title: document.querySelector("[data-testid='room-title']")?.textContent,
       whisper: document.getElementById("room-whisper")?.textContent,
       dreamline: document.getElementById("room-dreamline")?.textContent,
-      drift: Array.from(document.querySelectorAll("#drift-grid span")).map((node) => node.textContent),
+      drift: Array.from(document.querySelectorAll("#drift-grid span")).map(
+        (node) => node.textContent,
+      ),
     }));
 
     await page.goto(url);
@@ -168,13 +196,17 @@ test.describe("threshold room", () => {
       title: document.querySelector("[data-testid='room-title']")?.textContent,
       whisper: document.getElementById("room-whisper")?.textContent,
       dreamline: document.getElementById("room-dreamline")?.textContent,
-      drift: Array.from(document.querySelectorAll("#drift-grid span")).map((node) => node.textContent),
+      drift: Array.from(document.querySelectorAll("#drift-grid span")).map(
+        (node) => node.textContent,
+      ),
     }));
 
     expect(secondSnapshot).toEqual(firstSnapshot);
   });
 
-  test("observatory still renders non-background pixels with legacy params", async ({ page }) => {
+  test("observatory still renders non-background pixels with legacy params", async ({
+    page,
+  }) => {
     const background = "#10131d";
     const url = `http://localhost:${listening.port}/Sigil/threshold.html?background=${background.slice(1)}&line=7fffd4&accent=ff6bcb&iterations=96&noise=0.42&speed=0.65`;
 
@@ -221,12 +253,17 @@ test.describe("threshold room", () => {
     expect(render.nonBackground).toBeGreaterThan(120);
   });
 
-  test("memory chamber reveals the decoded key with keyboard input", async ({ page }) => {
+  test("memory chamber reveals the decoded key with keyboard input", async ({
+    page,
+  }) => {
     const url = `http://localhost:${listening.port}/forgotten.html?seed=amber-latch`;
     await page.goto(url);
 
     const button = page.locator("[data-testid='reveal-key']");
-    await expect(page.locator("#return-link")).toHaveAttribute("href", /seed=amber-latch/);
+    await expect(page.locator("#return-link")).toHaveAttribute(
+      "href",
+      /seed=amber-latch/,
+    );
     await button.focus();
     await page.keyboard.press("Enter");
 
@@ -235,15 +272,24 @@ test.describe("threshold room", () => {
     );
   });
 
-  test("reduced-motion mode still renders a coherent room", async ({ page }) => {
+  test("reduced-motion mode still renders a coherent room", async ({
+    page,
+  }) => {
     await page.emulateMedia({ reducedMotion: "reduce" });
-    await page.goto(`http://localhost:${listening.port}/index.html?seed=slow-lantern`);
+    await page.goto(
+      `http://localhost:${listening.port}/index.html?seed=slow-lantern`,
+    );
 
-    await expect(page.locator("body")).toHaveAttribute("data-motion", "reduced");
+    await expect(page.locator("body")).toHaveAttribute(
+      "data-motion",
+      "reduced",
+    );
     await expect(page.locator("[data-testid='room-canvas']")).toBeVisible();
   });
 
-  test("observatory supports mode selection and url synchronization", async ({ page }) => {
+  test("observatory supports mode selection and url synchronization", async ({
+    page,
+  }) => {
     const url = `http://localhost:${listening.port}/Sigil/threshold.html?seed=door-salt&mode=spiral`;
     await page.goto(url);
 
@@ -258,10 +304,70 @@ test.describe("threshold room", () => {
     await expect(manifest).toContainText("mode");
     await expect(manifest).toContainText("constellation");
   });
+
+  test("threefold corridors unlocks void resonance toggle and void mode", async ({
+    page,
+  }) => {
+    const url = `http://localhost:${listening.port}/index.html?seed=unlocked-void&phase=cross`;
+    await page.goto(url);
+
+    await page.evaluate(() => {
+      localStorage.setItem(
+        "threshold-visited-chambers-v1",
+        JSON.stringify(["room", "observatory", "memory"]),
+      );
+    });
+    await page.goto(url);
+
+    const toggle = page.locator("#manifest-toggle-void");
+    await expect(toggle).toBeVisible();
+    await expect(toggle).toContainText("threefold");
+
+    await toggle.click();
+    await expect(page.locator("body")).toHaveClass(/is-void/);
+    await expect(page).toHaveURL(/void=true/);
+
+    const obsLink = page.locator("#observatory-link");
+    await expect(obsLink).toHaveAttribute("href", /void=true/);
+
+    const memLink = page.locator("#memory-link");
+    await expect(memLink).toHaveAttribute("href", /void=true/);
+  });
+
+  test("observatory mode select includes void option when threefold", async ({
+    page,
+  }) => {
+    const url = `http://localhost:${listening.port}/Sigil/threshold.html?seed=obs-void&phase=approach`;
+    await page.goto(url);
+
+    await page.evaluate(() => {
+      localStorage.setItem(
+        "threshold-visited-chambers-v1",
+        JSON.stringify(["room", "observatory", "memory"]),
+      );
+    });
+    await page.goto(url);
+
+    const select = page.locator("#select-mode");
+    await expect(select).toBeVisible();
+
+    const voidOpt = select.locator("option[value='void']");
+    await expect(voidOpt).toBeAttached();
+    await expect(voidOpt).toContainText("void (unlocked)");
+
+    await select.selectOption("void");
+    await expect(page.locator("body")).toHaveClass(/is-void/);
+    await expect(page).toHaveURL(/mode=void/);
+    await expect(page).toHaveURL(/void=true/);
+  });
 });
 
 test.describe("mobile thresholds", () => {
-  test.use({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });
+  test.use({
+    viewport: { width: 390, height: 844 },
+    hasTouch: true,
+    isMobile: true,
+  });
 
   let listening;
 
@@ -274,7 +380,9 @@ test.describe("mobile thresholds", () => {
   });
 
   test("room controls remain visible on mobile", async ({ page }) => {
-    await page.goto(`http://localhost:${listening.port}/index.html?seed=mobile-veil`);
+    await page.goto(
+      `http://localhost:${listening.port}/index.html?seed=mobile-veil`,
+    );
 
     const phaseButton = page.locator("#phase-button");
     await expect(phaseButton).toBeVisible();
@@ -285,7 +393,9 @@ test.describe("mobile thresholds", () => {
   });
 
   test("memory chamber reveal works by touch", async ({ page }) => {
-    await page.goto(`http://localhost:${listening.port}/forgotten.html?seed=touch-echo`);
+    await page.goto(
+      `http://localhost:${listening.port}/forgotten.html?seed=touch-echo`,
+    );
 
     await page.locator("[data-testid='reveal-key']").tap();
     await expect(page.locator("[data-testid='memory-output']")).toContainText(
@@ -293,8 +403,12 @@ test.describe("mobile thresholds", () => {
     );
   });
 
-  test("observatory geometry section collapses on mobile viewports", async ({ page }) => {
-    await page.goto(`http://localhost:${listening.port}/Sigil/threshold.html?seed=mobile-collapse`);
+  test("observatory geometry section collapses on mobile viewports", async ({
+    page,
+  }) => {
+    await page.goto(
+      `http://localhost:${listening.port}/Sigil/threshold.html?seed=mobile-collapse`,
+    );
 
     const details = page.locator("details.sliders-section");
     await expect(details).toBeVisible();

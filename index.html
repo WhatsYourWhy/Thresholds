@@ -29,11 +29,20 @@
       body {
         min-height: 100vh;
         background:
-          radial-gradient(circle at 16% 18%, rgba(255, 255, 255, 0.08), transparent 22%),
-          radial-gradient(circle at 84% 18%, rgba(255, 208, 137, 0.12), transparent 20%),
+          radial-gradient(
+            circle at 16% 18%,
+            rgba(255, 255, 255, 0.08),
+            transparent 22%
+          ),
+          radial-gradient(
+            circle at 84% 18%,
+            rgba(255, 208, 137, 0.12),
+            transparent 20%
+          ),
           linear-gradient(145deg, #05070d 0%, var(--bg) 55%, #120c14 100%);
         color: var(--paper);
-        font-family: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Georgia, serif;
+        font-family:
+          "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Georgia, serif;
         overflow-x: hidden;
       }
 
@@ -54,7 +63,11 @@
         top: -10rem;
         right: -8rem;
         border-radius: 50%;
-        background: radial-gradient(circle, rgba(255, 208, 137, 0.12), transparent 70%);
+        background: radial-gradient(
+          circle,
+          rgba(255, 208, 137, 0.12),
+          transparent 70%
+        );
         filter: blur(12px);
       }
 
@@ -75,8 +88,14 @@
         opacity: 0.16;
         background-image:
           linear-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px),
-          linear-gradient(90deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
-        background-size: 3px 3px, 5px 5px;
+          linear-gradient(
+            90deg,
+            rgba(255, 255, 255, 0.025) 1px,
+            transparent 1px
+          );
+        background-size:
+          3px 3px,
+          5px 5px;
         mix-blend-mode: soft-light;
         z-index: 1;
       }
@@ -95,7 +114,11 @@
       .manifest-shell,
       .secret-shell {
         border: 1px solid rgba(255, 255, 255, 0.08);
-        background: linear-gradient(160deg, rgba(7, 10, 18, 0.86), var(--panel));
+        background: linear-gradient(
+          160deg,
+          rgba(7, 10, 18, 0.86),
+          var(--panel)
+        );
         box-shadow: 0 26px 80px var(--shadow);
         backdrop-filter: blur(10px);
       }
@@ -116,7 +139,11 @@
         position: absolute;
         inset: 0;
         background:
-          radial-gradient(circle at 25% 18%, rgba(255, 255, 255, 0.08), transparent 26%),
+          radial-gradient(
+            circle at 25% 18%,
+            rgba(255, 255, 255, 0.08),
+            transparent 26%
+          ),
           linear-gradient(120deg, rgba(255, 255, 255, 0.03), transparent 55%);
         pointer-events: none;
       }
@@ -133,7 +160,8 @@
       .artifact-dock,
       .manifest-shell,
       .secret-shell {
-        font-family: "IBM Plex Mono", "Cascadia Code", "Fira Code", Consolas, monospace;
+        font-family:
+          "IBM Plex Mono", "Cascadia Code", "Fira Code", Consolas, monospace;
       }
 
       .eyebrow {
@@ -221,7 +249,11 @@
         padding: 0.78rem 1rem;
         cursor: pointer;
         text-decoration: none;
-        transition: transform 180ms ease, border-color 180ms ease, background 180ms ease, box-shadow 180ms ease;
+        transition:
+          transform 180ms ease,
+          border-color 180ms ease,
+          background 180ms ease,
+          box-shadow 180ms ease;
       }
 
       button:hover,
@@ -239,7 +271,11 @@
 
       .phase-button {
         border-color: rgba(255, 255, 255, 0.18);
-        background: linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.02));
+        background: linear-gradient(
+          135deg,
+          rgba(255, 255, 255, 0.08),
+          rgba(255, 255, 255, 0.02)
+        );
       }
 
       #audio-button.is-resonating {
@@ -247,7 +283,6 @@
         background: rgba(255, 208, 137, 0.08);
         box-shadow: 0 0 12px rgba(255, 208, 137, 0.15);
       }
-
 
       .artifact-dock {
         margin-top: 1.5rem;
@@ -262,7 +297,11 @@
         border-radius: 1.6rem;
         border: 1px solid rgba(255, 255, 255, 0.08);
         background:
-          radial-gradient(circle at 50% 38%, rgba(255, 255, 255, 0.08), transparent 42%),
+          radial-gradient(
+            circle at 50% 38%,
+            rgba(255, 255, 255, 0.08),
+            transparent 42%
+          ),
           rgba(5, 7, 12, 0.75);
         padding: 1rem;
         min-height: min(68vh, 42rem);
@@ -312,7 +351,9 @@
         border-radius: 1rem;
         border: 1px solid rgba(255, 255, 255, 0.08);
         background: rgba(255, 255, 255, 0.03);
-        transition: border-color 300ms ease, background-color 300ms ease;
+        transition:
+          border-color 300ms ease,
+          background-color 300ms ease;
       }
 
       @keyframes echoFlash {
@@ -338,7 +379,8 @@
         letter-spacing: 0.14em;
         text-transform: uppercase;
         color: rgba(244, 236, 223, 0.68);
-        font-family: "IBM Plex Mono", "Cascadia Code", "Fira Code", Consolas, monospace;
+        font-family:
+          "IBM Plex Mono", "Cascadia Code", "Fira Code", Consolas, monospace;
       }
 
       .echo-head {
@@ -413,7 +455,9 @@
         display: flex;
         flex-direction: column;
         gap: 0.95rem;
-        transition: transform 220ms ease, opacity 220ms ease;
+        transition:
+          transform 220ms ease,
+          opacity 220ms ease;
       }
 
       .manifest-shell[data-open="false"] {
@@ -471,6 +515,50 @@
         color: rgba(244, 236, 223, 0.84);
       }
 
+      .clickable-manifest-row {
+        cursor: pointer;
+        position: relative;
+        transition:
+          border-color 200ms ease,
+          background 200ms ease,
+          box-shadow 200ms ease;
+      }
+
+      .clickable-manifest-row:hover,
+      .clickable-manifest-row:focus-visible {
+        border-color: var(--accent);
+        background: rgba(255, 255, 255, 0.08);
+        box-shadow: 0 0 10px rgba(0, 255, 255, 0.15);
+        outline: none;
+      }
+
+      .clickable-manifest-row.is-void-active {
+        border-color: var(--accent);
+        background: rgba(138, 43, 226, 0.1);
+        box-shadow: 0 0 12px rgba(138, 43, 226, 0.25);
+      }
+
+      .clickable-manifest-row.is-void-active dd {
+        color: var(--accent);
+        text-shadow: 0 0 8px var(--accent);
+        font-weight: bold;
+      }
+
+      body.is-void {
+        background:
+          radial-gradient(
+            circle at 16% 18%,
+            rgba(138, 43, 226, 0.12),
+            transparent 25%
+          ),
+          radial-gradient(
+            circle at 84% 18%,
+            rgba(0, 255, 255, 0.15),
+            transparent 22%
+          ),
+          linear-gradient(145deg, #010103 0%, var(--bg) 55%, #05000a 100%);
+      }
+
       .microcopy {
         font-size: 0.72rem;
         line-height: 1.8;
@@ -492,7 +580,9 @@
         transform: translateY(calc(100% + 2rem));
         opacity: 0;
         pointer-events: none;
-        transition: transform 260ms ease, opacity 260ms ease;
+        transition:
+          transform 260ms ease,
+          opacity 260ms ease;
       }
 
       .secret-shell.is-visible {
@@ -533,7 +623,10 @@
         color: rgba(244, 236, 223, 0.8);
         cursor: pointer;
         font: inherit;
-        transition: transform 180ms ease, background 180ms ease, border-color 180ms ease;
+        transition:
+          transform 180ms ease,
+          background 180ms ease,
+          border-color 180ms ease;
       }
 
       .secret-close:hover,
@@ -588,9 +681,18 @@
       }
 
       @keyframes phaseCross {
-        0% { opacity: 1; filter: blur(0px); }
-        30% { opacity: 0.6; filter: blur(1.5px); }
-        100% { opacity: 1; filter: blur(0px); }
+        0% {
+          opacity: 1;
+          filter: blur(0px);
+        }
+        30% {
+          opacity: 0.6;
+          filter: blur(1.5px);
+        }
+        100% {
+          opacity: 1;
+          filter: blur(0px);
+        }
       }
 
       .is-crossing .sigil-shell canvas {
@@ -686,12 +788,17 @@
     </style>
     <script src="thresholds.js" defer></script>
     <!-- Google tag (gtag.js) -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-3P9RZGZTZX"></script>
+    <script
+      async
+      src="https://www.googletagmanager.com/gtag/js?id=G-3P9RZGZTZX"
+    ></script>
     <script>
       window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
-      gtag('config', 'G-3P9RZGZTZX');
+      function gtag() {
+        dataLayer.push(arguments);
+      }
+      gtag("js", new Date());
+      gtag("config", "G-3P9RZGZTZX");
     </script>
   </head>
   <body data-phase="approach" data-motion="full">
@@ -708,21 +815,31 @@
           <p class="mantra" id="room-mantra"></p>
           <p class="dreamline" id="room-dreamline"></p>
           <div class="seedline">
-            <span>seed <strong id="seed-value" data-testid="seed-value"></strong></span>
+            <span
+              >seed <strong id="seed-value" data-testid="seed-value"></strong
+            ></span>
             <span>motion <strong id="motion-value"></strong></span>
             <span>glyph <strong id="glyph-value"></strong></span>
           </div>
           <div class="controls">
-            <button id="phase-button" class="phase-button" type="button">Advance phase</button>
+            <button id="phase-button" class="phase-button" type="button">
+              Advance phase
+            </button>
             <button id="reseed-button" type="button">Reseed the room</button>
             <button id="capture-button" type="button">Capture echo</button>
             <button id="verse-button" type="button">Invoke omen</button>
             <button id="manifest-button" type="button">Toggle manifest</button>
-            <button id="audio-button" type="button">Resonate (Audio off)</button>
+            <button id="audio-button" type="button">
+              Resonate (Audio off)
+            </button>
           </div>
           <div class="artifact-dock" aria-label="Artifacts">
-            <a id="observatory-link" href="Sigil/threshold.html">Open the observatory</a>
-            <a id="memory-link" href="forgotten.html">Enter the memory chamber</a>
+            <a id="observatory-link" href="Sigil/threshold.html"
+              >Open the observatory</a
+            >
+            <a id="memory-link" href="forgotten.html"
+              >Enter the memory chamber</a
+            >
             <a href="threshold.yaml">Read the raw manifest</a>
           </div>
         </div>
@@ -730,18 +847,33 @@
         <div class="sigil-column">
           <div class="sigil-shell">
             <p class="sr-only" id="room-canvas-desc">
-              A seeded threshold sigil that bends toward the pointer and shifts as the phase changes.
+              A seeded threshold sigil that bends toward the pointer and shifts
+              as the phase changes.
             </p>
-            <canvas id="room-canvas" data-testid="room-canvas" aria-describedby="room-canvas-desc"></canvas>
-            <button class="phase-prompt" id="canvas-prompt" type="button">Touch the field</button>
+            <canvas
+              id="room-canvas"
+              data-testid="room-canvas"
+              aria-describedby="room-canvas-desc"
+            ></canvas>
+            <button class="phase-prompt" id="canvas-prompt" type="button">
+              Touch the field
+            </button>
           </div>
           <div class="drift" id="drift-grid" aria-live="polite"></div>
           <section class="echo-shelf" aria-labelledby="echo-shelf-title">
             <div class="echo-head">
               <h2 id="echo-shelf-title">Echo Shelf</h2>
               <div class="echo-actions">
-                <button id="copy-link-button" class="echo-action" type="button">Copy ritual link</button>
-                <button id="clear-echoes-button" class="echo-action" type="button">Clear</button>
+                <button id="copy-link-button" class="echo-action" type="button">
+                  Copy ritual link
+                </button>
+                <button
+                  id="clear-echoes-button"
+                  class="echo-action"
+                  type="button"
+                >
+                  Clear
+                </button>
               </div>
             </div>
             <ul class="echo-list" id="echo-list"></ul>
@@ -749,17 +881,24 @@
         </div>
       </section>
 
-      <aside class="manifest-shell" id="manifest-panel" data-open="true" data-testid="manifest-panel">
+      <aside
+        class="manifest-shell"
+        id="manifest-panel"
+        data-open="true"
+        data-testid="manifest-panel"
+      >
         <div class="manifest-head">
           <strong>Live Manifest</strong>
           <span id="manifest-status">listening</span>
         </div>
         <p class="manifest-copy">
-          The values are old. The room is not. Press M when you want this layer to step forward or away.
+          The values are old. The room is not. Press M when you want this layer
+          to step forward or away.
         </p>
         <dl class="manifest-list" id="manifest-list"></dl>
         <p class="microcopy">
-          Click the room or the field to cycle phases. Wait, or hold a touch, if you want it to volunteer more.
+          Click the room or the field to cycle phases. Wait, or hold a touch, if
+          you want it to volunteer more.
         </p>
       </aside>
     </main>
@@ -767,18 +906,22 @@
     <section class="secret-shell" id="secret-panel" aria-live="polite">
       <div class="secret-head">
         <h2>Soft secret</h2>
-        <button class="secret-close" id="secret-close" type="button" aria-label="Dismiss soft secret">Dismiss</button>
+        <button
+          class="secret-close"
+          id="secret-close"
+          type="button"
+          aria-label="Dismiss soft secret"
+        >
+          Dismiss
+        </button>
       </div>
       <p id="secret-copy"></p>
       <p class="secret-meta" id="secret-meta"></p>
-      <a class="secret-link" id="secret-link" href="forgotten.html">Continue into the memory chamber</a>
+      <a class="secret-link" id="secret-link" href="forgotten.html"
+        >Continue into the memory chamber</a
+      >
     </section>
 
     <script src="room.js" defer></script>
   </body>
 </html>
-
-
-
-
-

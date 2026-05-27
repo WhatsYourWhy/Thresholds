@@ -21,10 +21,15 @@
         margin: 0;
         min-height: 100vh;
         background:
-          radial-gradient(circle at 18% 18%, rgba(255, 255, 255, 0.05), transparent 20%),
+          radial-gradient(
+            circle at 18% 18%,
+            rgba(255, 255, 255, 0.05),
+            transparent 20%
+          ),
           linear-gradient(150deg, #05070d 0%, var(--bg) 58%, #150d16 100%);
         color: #f4ecdf;
-        font-family: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Georgia, serif;
+        font-family:
+          "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Georgia, serif;
         display: grid;
         place-items: center;
         overflow: hidden;
@@ -47,7 +52,11 @@
         top: -8rem;
         right: -6rem;
         border-radius: 50%;
-        background: radial-gradient(circle, rgba(255, 208, 137, 0.08), transparent 70%);
+        background: radial-gradient(
+          circle,
+          rgba(255, 208, 137, 0.08),
+          transparent 70%
+        );
         filter: blur(12px);
       }
 
@@ -57,7 +66,11 @@
         bottom: -6rem;
         left: -5rem;
         border-radius: 50%;
-        background: radial-gradient(circle, rgba(149, 242, 255, 0.08), transparent 72%);
+        background: radial-gradient(
+          circle,
+          rgba(149, 242, 255, 0.08),
+          transparent 72%
+        );
         filter: blur(10px);
       }
 
@@ -69,7 +82,9 @@
         background-image:
           linear-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px),
           linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
-        background-size: 4px 4px, 6px 6px;
+        background-size:
+          4px 4px,
+          6px 6px;
       }
 
       .veil {
@@ -111,7 +126,8 @@
       button,
       a,
       .decoded {
-        font-family: "IBM Plex Mono", "Cascadia Code", "Fira Code", Consolas, monospace;
+        font-family:
+          "IBM Plex Mono", "Cascadia Code", "Fira Code", Consolas, monospace;
       }
 
       .micro {
@@ -150,7 +166,10 @@
         text-decoration: none;
         background: rgba(255, 255, 255, 0.05);
         cursor: pointer;
-        transition: transform 180ms ease, background 180ms ease, border-color 180ms ease;
+        transition:
+          transform 180ms ease,
+          background 180ms ease,
+          border-color 180ms ease;
       }
 
       button:hover,
@@ -210,8 +229,14 @@
       }
 
       @keyframes fadeIn {
-        from { opacity: 0; transform: translateY(6px); }
-        to { opacity: 1; transform: translateY(0); }
+        from {
+          opacity: 0;
+          transform: translateY(6px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
       }
 
       body {
@@ -221,8 +246,24 @@
       body.fade-out {
         opacity: 0;
         transform: translateY(-4px);
-        transition: opacity 260ms ease, transform 260ms ease;
+        transition:
+          opacity 260ms ease,
+          transform 260ms ease;
         pointer-events: none;
+      }
+
+      body.is-void {
+        --bg: #020206;
+        --line: #8a2be2;
+        --accent: #00ffff;
+        --panel: rgba(2, 2, 6, 0.85);
+        background:
+          radial-gradient(
+            circle at 18% 18%,
+            rgba(138, 43, 226, 0.12),
+            transparent 25%
+          ),
+          linear-gradient(150deg, #010103 0%, var(--bg) 58%, #05000a 100%);
       }
 
       @media (prefers-reduced-motion: reduce) {
@@ -244,21 +285,33 @@
         <div class="micro">Memory Chamber</div>
         <h1>What was hidden is only delayed.</h1>
         <p>
-          This chamber does not push the key into your downloads folder. It lets the address arrive in the room first.
+          This chamber does not push the key into your downloads folder. It lets
+          the address arrive in the room first.
         </p>
 
         <div class="memory-card">
           <div class="micro">Decoded address</div>
-          <div class="decoded" id="decoded-output" data-testid="memory-output">The chamber is waiting.</div>
-          <p id="memory-note">Reveal the key by click, keyboard, or touch. The old link will appear here in daylight.</p>
+          <div class="decoded" id="decoded-output" data-testid="memory-output">
+            The chamber is waiting.
+          </div>
+          <p id="memory-note">
+            Reveal the key by click, keyboard, or touch. The old link will
+            appear here in daylight.
+          </p>
         </div>
 
         <div class="actions">
-          <button id="reveal-button" data-testid="reveal-key" type="button">Reveal the key</button>
+          <button id="reveal-button" data-testid="reveal-key" type="button">
+            Reveal the key
+          </button>
           <button id="copy-button" type="button">Copy address</button>
           <button id="audio-button" type="button">Resonate (Audio off)</button>
-          <a id="open-link" href="forgotten.key" download>Download the raw key</a>
-          <a id="observatory-link" href="Sigil/threshold.html">Open observatory</a>
+          <a id="open-link" href="forgotten.key" download
+            >Download the raw key</a
+          >
+          <a id="observatory-link" href="Sigil/threshold.html"
+            >Open observatory</a
+          >
           <a id="return-link" href="index.html">Return to the room</a>
         </div>
       </section>
@@ -289,8 +342,14 @@
         const reduceMotion =
           window.matchMedia &&
           window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-        const seed = Engine.sanitizeSeed(search.get("seed")) || Engine.generateSeed();
+        const seed =
+          Engine.sanitizeSeed(search.get("seed")) || Engine.generateSeed();
         const phase = Engine.parsePhase(search.get("phase"));
+        const voidActive = search.get("void") === "true";
+
+        if (voidActive) {
+          document.body.classList.add("is-void");
+        }
 
         const canvas = document.getElementById("memory-canvas");
         const decodedOutput = document.getElementById("decoded-output");
@@ -303,23 +362,33 @@
         const memoryNote = document.getElementById("memory-note");
         const audio = Engine.createResonanceCircuit();
 
+        const rendererOverrides = {
+          speed: reduceMotion ? 0.18 : 0.36,
+          noise: reduceMotion ? 0.12 : 0.26,
+        };
+        if (voidActive) {
+          rendererOverrides.void = true;
+          rendererOverrides.mode = "void";
+        }
+
         const renderer = Engine.createSigilRenderer({
           canvas,
           seed,
           phase: "listen",
           reducedMotion: reduceMotion,
-          overrides: {
-            speed: reduceMotion ? 0.18 : 0.36,
-            noise: reduceMotion ? 0.12 : 0.26,
-          },
+          overrides: rendererOverrides,
           audioSource: audio,
         });
 
         function updateNavigation() {
-          const query = new URLSearchParams({
+          const params = {
             seed,
             phase,
-          }).toString();
+          };
+          if (voidActive) {
+            params.void = "true";
+          }
+          const query = new URLSearchParams(params).toString();
           observatoryLink.href = `Sigil/threshold.html?${query}`;
           observatoryLink.textContent = "Open observatory with this seed";
           returnLink.href = `index.html?${query}`;
@@ -343,7 +412,9 @@
         function syncAudioUI() {
           if (!audioButton) return;
           const active = audio && audio.isActive();
-          audioButton.textContent = active ? "Resonate (Audio on)" : "Resonate (Audio off)";
+          audioButton.textContent = active
+            ? "Resonate (Audio on)"
+            : "Resonate (Audio off)";
           if (active) {
             audioButton.classList.add("is-resonating");
           } else {
@@ -356,15 +427,17 @@
             const response = await fetch("forgotten.key");
             const encoded = await response.text();
             const decoded = Engine.decodeBase64(encoded);
-            decodedOutput.textContent = decoded || "The key would not translate.";
+            decodedOutput.textContent =
+              decoded || "The key would not translate.";
             openLink.href = decoded || "forgotten.key";
             openLink.removeAttribute("download");
-            
+
             const verse = Engine.deriveVerse(seed, phase, 7);
             memoryNote.textContent = `"${verse}" — The old address is now visible. The raw key remains nearby, and your path back through the room stays seeded.`;
           } catch (error) {
             decodedOutput.textContent = "The chamber could not reach the key.";
-            memoryNote.textContent = "Fetch failed, but the raw key remains available as a file.";
+            memoryNote.textContent =
+              "Fetch failed, but the raw key remains available as a file.";
           }
         }
 
@@ -381,7 +454,9 @@
         // Fade out then navigate for outbound links
         function fadeNavigate(href) {
           document.body.classList.add("fade-out");
-          window.setTimeout(() => { window.location.href = href; }, 280);
+          window.setTimeout(() => {
+            window.location.href = href;
+          }, 280);
         }
         observatoryLink.addEventListener("click", (e) => {
           e.preventDefault();
@@ -416,6 +491,9 @@
           const active = audio.isActive();
           audio.toggle(!active);
           if (!active) {
+            if (audio && typeof audio.setVoidMode === "function") {
+              audio.setVoidMode(voidActive);
+            }
             audio.setSeed(seed);
             audio.setPointer(0.5, 0.5, "cross");
           }
@@ -427,7 +505,10 @@
             const metrics = audio.getMetrics();
             const pulse = 1.0 + metrics.lfoPhase * 0.12;
             const envelope = 1.0 + (metrics.filterEnvelope - 0.5) * 0.08;
-            document.body.style.setProperty("--audio-bloom-glow", `${pulse * envelope}`);
+            document.body.style.setProperty(
+              "--audio-bloom-glow",
+              `${pulse * envelope}`,
+            );
           } else {
             document.body.style.setProperty("--audio-bloom-glow", "1.0");
           }
@@ -435,6 +516,12 @@
         }
         requestAnimationFrame(updateAudioGlow);
 
+        if (audio) {
+          if (typeof audio.setVoidMode === "function") {
+            audio.setVoidMode(voidActive);
+          }
+          audio.setSeed(seed);
+        }
         updateNavigation();
         populateAside();
         syncAudioUI();
@@ -442,10 +529,3 @@
     </script>
   </body>
 </html>
-
-
-
-
-
-
-
