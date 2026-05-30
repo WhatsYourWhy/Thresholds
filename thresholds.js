@@ -978,12 +978,60 @@
     let gainNode = null;
     let lfo = null;
     let lfoGain = null;
+    let delayNode = null;
+    let feedbackGain = null;
+    let wetGain = null;
     let active = false;
     let lfoPhaseOffset = 0;
     let filterEnvelopeValue = 0.5;
     let pendingSeed = null;
     let isVoidModeActive = false;
     let lastSeed = "threshold";
+    let currentPaletteName = "glass";
+    let hasExplicitPalette = false;
+
+    const PALETTE_AUDIO_CONFIGS = {
+      glass: {
+        osc1Type: "triangle",
+        osc2Type: "sine",
+        baseDelayTime: 0.35,
+        baseFeedback: 0.45,
+        baseWet: 0.22,
+        Q: 5.5,
+      },
+      ember: {
+        osc1Type: "sawtooth",
+        osc2Type: "triangle",
+        baseDelayTime: 0.5,
+        baseFeedback: 0.35,
+        baseWet: 0.15,
+        Q: 3.5,
+      },
+      tidal: {
+        osc1Type: "sine",
+        osc2Type: "triangle",
+        baseDelayTime: 0.8,
+        baseFeedback: 0.4,
+        baseWet: 0.18,
+        Q: 2.0,
+      },
+      ash: {
+        osc1Type: "sawtooth",
+        osc2Type: "sawtooth",
+        baseDelayTime: 0.6,
+        baseFeedback: 0.2,
+        baseWet: 0.12,
+        Q: 1.5,
+      },
+      void: {
+        osc1Type: "sawtooth",
+        osc2Type: "triangle",
+        baseDelayTime: 1.2,
+        baseFeedback: 0.55,
+        baseWet: 0.26,
+        Q: 2.5,
+      },
+    };
 
     function init() {
       if (ctx) return;
@@ -996,6 +1044,9 @@
       osc2 = ctx.createOscillator();
       filter = ctx.createBiquadFilter();
       gainNode = ctx.createGain();
+      delayNode = ctx.createDelay(2.0);
+      feedbackGain = ctx.createGain();
+      wetGain = ctx.createGain();
 
       osc1.type = "sawtooth";
       osc1.frequency.value = 55.0;
@@ -1017,7 +1068,19 @@
 
       osc1.connect(filter);
       osc2.connect(filter);
+
+      // Dry path
       filter.connect(gainNode);
+
+      // Wet path (delay loop)
+      filter.connect(delayNode);
+      delayNode.connect(wetGain);
+      wetGain.connect(gainNode);
+
+      // Feedback loop
+      delayNode.connect(feedbackGain);
+      feedbackGain.connect(delayNode);
+
       gainNode.connect(ctx.destination);
 
       gainNode.gain.setValueAtTime(0, ctx.currentTime);
@@ -1030,6 +1093,26 @@
       if (pendingSeed !== null) {
         applySeedToNodes(pendingSeed);
         pendingSeed = null;
+      }
+      applyPaletteSettings();
+    }
+
+    function applyPaletteSettings() {
+      const isVoid = isVoidModeActive || currentPaletteName === "void";
+      const configKey = isVoid ? "void" : currentPaletteName;
+      const config =
+        PALETTE_AUDIO_CONFIGS[configKey] || PALETTE_AUDIO_CONFIGS.glass;
+
+      if (osc1 && osc2 && filter && delayNode) {
+        osc1.type = config.osc1Type;
+        osc2.type = config.osc2Type;
+        filter.Q.setTargetAtTime(config.Q, ctx.currentTime, 0.4);
+        delayNode.delayTime.setTargetAtTime(
+          config.baseDelayTime,
+          ctx.currentTime,
+          0.6,
+        );
+        applySeedToNodes(lastSeed);
       }
     }
 
@@ -1052,9 +1135,19 @@
     }
 
     function setPointer(x, y, phase) {
-      if (!active || !filter || !osc2 || !ctx) return;
+      if (
+        !active ||
+        !filter ||
+        !osc2 ||
+        !ctx ||
+        !delayNode ||
+        !feedbackGain ||
+        !wetGain
+      )
+        return;
 
-      const targetCutoff = 120 + (1 - y) * 560;
+      const height = 1 - y;
+      const targetCutoff = 120 + height * 560;
       filter.frequency.setTargetAtTime(targetCutoff, ctx.currentTime, 0.2);
       // Track normalised filter envelope for renderer coupling
       filterEnvelopeValue = (targetCutoff - 120) / 560;
@@ -1067,6 +1160,25 @@
         0.3,
       );
 
+      const isVoid = isVoidModeActive || currentPaletteName === "void";
+      const configKey = isVoid ? "void" : currentPaletteName;
+      const config =
+        PALETTE_AUDIO_CONFIGS[configKey] || PALETTE_AUDIO_CONFIGS.glass;
+
+      // Modulate feedback based on X
+      const targetFeedback = Math.max(
+        0.05,
+        Math.min(0.85, config.baseFeedback * (0.4 + x * 1.2)),
+      );
+      feedbackGain.gain.setTargetAtTime(targetFeedback, ctx.currentTime, 0.3);
+
+      // Modulate wet mix based on Y (height = 1 - y)
+      const targetWet = Math.max(
+        0.01,
+        Math.min(0.7, config.baseWet * (0.3 + height * 1.4)),
+      );
+      wetGain.gain.setTargetAtTime(targetWet, ctx.currentTime, 0.2);
+
       let volume = 0.08;
       if (phase === "approach") volume = 0.06;
       if (phase === "listen") volume = 0.09;
@@ -1078,12 +1190,13 @@
       const hash = hashString(seed || "threshold");
       const baseNotes = [41.2, 43.65, 49.0, 55.0, 65.41];
       let rootNote = baseNotes[hash % baseNotes.length];
-      if (isVoidModeActive) {
+      const isVoid = isVoidModeActive || currentPaletteName === "void";
+      if (isVoid) {
         rootNote = rootNote * 0.5;
       }
       osc1.frequency.setTargetAtTime(rootNote, ctx.currentTime, 0.8);
       osc2.frequency.setTargetAtTime(
-        rootNote * (isVoidModeActive ? 1.003 : 1.006),
+        rootNote * (isVoid ? 1.003 : 1.006),
         ctx.currentTime,
         0.8,
       );
@@ -1091,6 +1204,12 @@
 
     function setSeed(seed) {
       lastSeed = seed || "threshold";
+      if (!hasExplicitPalette) {
+        const hash = hashString(lastSeed);
+        const derivedPaletteFamily =
+          PALETTE_FAMILIES[hash % PALETTE_FAMILIES.length].name;
+        currentPaletteName = derivedPaletteFamily;
+      }
       // Always pre-warm pitch regardless of active state
       if (!ctx) {
         // Store for when init() is called
@@ -1098,13 +1217,23 @@
         return;
       }
       if (!osc1 || !osc2) return;
-      applySeedToNodes(lastSeed);
+      applyPaletteSettings();
     }
 
     function setVoidMode(enabled) {
       isVoidModeActive = !!enabled;
       if (ctx && (osc1 || osc2)) {
-        applySeedToNodes(lastSeed);
+        applyPaletteSettings();
+      }
+    }
+
+    function setPalette(paletteName) {
+      if (paletteName && PALETTE_AUDIO_CONFIGS[paletteName]) {
+        currentPaletteName = paletteName;
+        hasExplicitPalette = true;
+      }
+      if (ctx && osc1 && osc2) {
+        applyPaletteSettings();
       }
     }
 
@@ -1130,6 +1259,7 @@
       setPointer,
       setSeed,
       setVoidMode,
+      setPalette,
       getMetrics,
       isActive: function () {
         return active;
@@ -1180,7 +1310,10 @@
     }
 
     function stop() {
-      if (frameHandle !== null && typeof global.cancelAnimationFrame === "function") {
+      if (
+        frameHandle !== null &&
+        typeof global.cancelAnimationFrame === "function"
+      ) {
         global.cancelAnimationFrame(frameHandle);
       }
       frameHandle = null;

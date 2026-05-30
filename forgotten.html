@@ -361,7 +361,10 @@
         const returnLink = document.getElementById("return-link");
         const memoryNote = document.getElementById("memory-note");
         const audio = Engine.createResonanceCircuit();
-        const audioGlow = Engine.createAudioGlowController(audio, document.body);
+        const audioGlow = Engine.createAudioGlowController(
+          audio,
+          document.body,
+        );
 
         const rendererOverrides = {
           speed: reduceMotion ? 0.18 : 0.36,
@@ -495,6 +498,14 @@
             if (audio && typeof audio.setVoidMode === "function") {
               audio.setVoidMode(voidActive);
             }
+            if (audio && typeof audio.setPalette === "function") {
+              const palette = Engine.derivePalette(
+                seed,
+                "cross",
+                voidActive ? { void: true } : {},
+              );
+              audio.setPalette(palette.name);
+            }
             audio.setSeed(seed);
             audio.setPointer(0.5, 0.5, "cross");
           }
@@ -520,6 +531,14 @@
         if (audio) {
           if (typeof audio.setVoidMode === "function") {
             audio.setVoidMode(voidActive);
+          }
+          if (typeof audio.setPalette === "function") {
+            const palette = Engine.derivePalette(
+              seed,
+              "cross",
+              voidActive ? { void: true } : {},
+            );
+            audio.setPalette(palette.name);
           }
           audio.setSeed(seed);
         }

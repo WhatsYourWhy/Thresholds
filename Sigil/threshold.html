@@ -708,9 +708,12 @@
         const voidActive =
           search.get("void") === "true" || search.get("mode") === "void";
         const queryMode = search.get("mode");
-        const parsedMode = ["orbital", "constellation", "spiral", "void"].includes(
-          queryMode,
-        )
+        const parsedMode = [
+          "orbital",
+          "constellation",
+          "spiral",
+          "void",
+        ].includes(queryMode)
           ? queryMode
           : undefined;
         const overrides = {
@@ -769,7 +772,10 @@
         const roomLink = document.getElementById("room-link");
         const memoryLink = document.getElementById("memory-link");
         const audio = Engine.createResonanceCircuit();
-        const audioGlow = Engine.createAudioGlowController(audio, document.body);
+        const audioGlow = Engine.createAudioGlowController(
+          audio,
+          document.body,
+        );
 
         const renderer = Engine.createSigilRenderer({
           canvas,
@@ -935,6 +941,14 @@
             if (typeof audio.setVoidMode === "function") {
               audio.setVoidMode(state.overrides.void === true);
             }
+            if (typeof audio.setPalette === "function") {
+              const palette = Engine.derivePalette(
+                state.seed,
+                state.phase,
+                state.overrides,
+              );
+              audio.setPalette(palette.name);
+            }
             audio.setSeed(state.seed);
           }
           if (audio && audio.isActive()) {
@@ -1003,6 +1017,14 @@
               document.body.classList.remove("is-void");
             }
             updateTheme();
+            if (audio && typeof audio.setPalette === "function") {
+              const palette = Engine.derivePalette(
+                state.seed,
+                state.phase,
+                state.overrides,
+              );
+              audio.setPalette(palette.name);
+            }
 
             renderer.setState({
               seed: state.seed,
