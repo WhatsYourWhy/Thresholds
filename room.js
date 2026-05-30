@@ -428,6 +428,14 @@ window.addEventListener("DOMContentLoaded", () => {
       if (typeof audio.setVoidMode === "function") {
         audio.setVoidMode(state.voidActive);
       }
+      if (typeof audio.setPalette === "function") {
+        const palette = Engine.derivePalette(
+          state.seed,
+          state.phase,
+          state.voidActive ? { void: true } : {},
+        );
+        audio.setPalette(palette.name);
+      }
       audio.setSeed(state.seed);
     }
     if (audio && audio.isActive()) {

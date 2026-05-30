@@ -360,6 +360,37 @@ test.describe("threshold room", () => {
     await expect(page).toHaveURL(/mode=void/);
     await expect(page).toHaveURL(/void=true/);
   });
+
+  test("resonance circuit exposes setPalette and handles palette updates", async ({
+    page,
+  }) => {
+    const url = `http://localhost:${listening.port}/index.html?seed=audio-palettes&phase=approach`;
+    await page.goto(url);
+
+    const checkAudioPalette = await page.evaluate(() => {
+      const Engine = window.ThresholdsEngine;
+      if (!Engine || typeof Engine.createResonanceCircuit !== "function") {
+        return "missing engine or circuit builder";
+      }
+      const audio = Engine.createResonanceCircuit();
+      if (typeof audio.setPalette !== "function") {
+        return "missing setPalette method";
+      }
+      try {
+        audio.setPalette("glass");
+        audio.setPalette("ember");
+        audio.setPalette("tidal");
+        audio.setPalette("ash");
+        audio.setPalette("void");
+        audio.setPalette("invalid-palette");
+        return "ok";
+      } catch (e) {
+        return e.message;
+      }
+    });
+
+    expect(checkAudioPalette).toBe("ok");
+  });
 });
 
 test.describe("mobile thresholds", () => {
