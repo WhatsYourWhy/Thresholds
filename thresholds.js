@@ -1048,6 +1048,17 @@
       feedbackGain = ctx.createGain();
       wetGain = ctx.createGain();
 
+      // Initialise delay gains from the active palette so the feedback loop
+      // never runs at the createGain() default of 1.0 before setPointer fires.
+      {
+        const _isVoid = isVoidModeActive || currentPaletteName === "void";
+        const _key = _isVoid ? "void" : currentPaletteName;
+        const _cfg =
+          PALETTE_AUDIO_CONFIGS[_key] || PALETTE_AUDIO_CONFIGS.glass;
+        feedbackGain.gain.value = _cfg.baseFeedback;
+        wetGain.gain.value = _cfg.baseWet;
+      }
+
       osc1.type = "sawtooth";
       osc1.frequency.value = 55.0;
 
